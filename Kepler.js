@@ -17,7 +17,7 @@ KEPLER.UNIT_LENGTH = 'meter';
 KEPLER.MAX_SAFE_LENGTH = Number.MAX_SAFE_INTEGER; // 9007199254740991 m ~= 0.95 light years
 
 /**@constant {number}  */
-KEPLER.KILOMETER = 1000;
+KEPLER.KILOMETER = KEPLER.KM = 1000;
 
 /**@constant {number}  */
 KEPLER.AU = 1.496e+11;
@@ -69,3 +69,27 @@ KEPLER.DEGREE = 0.0174533;
 
 /**@constant {number}  */
 KEPLER.PI = Math.PI;
+
+/**@constant {number}  */
+KEPLER.DEGREES_PER_DAY = KEPLER.DEGREE / KEPLER.DAY;
+
+
+////MASS
+
+/**@constant {string}  */
+KEPLER.UNIT_mass = 'Kilograms';
+
+/**@constant {number}  */
+KEPLER.tonne = KEPLER.ton = 1000;
+
+/**@constant {number}  */
+KEPLER.EARTH_MASS = 5.974e24;
+
+/**@constant {number}  */
+KEPLER.SOL_MASS = 1.9891e30;
+
+
+////GRAVITATIONAL CONSTANT
+
+/**@constant {number}  */
+KEPLER.G = 6.674e-11; //Nm^2 / kg^2 = kg*m*(1/s^2)*m^2*(1/kg^2) = m^3/(kg*s^2)
