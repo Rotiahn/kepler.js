@@ -58,3 +58,14 @@ KEPLER.DAY = 86400;
 /**@constant {number}  */
 KEPLER.YEAR = 3.154e+7;
 
+
+////ROTATION
+
+/**@constant {string}  */
+KEPLER.UNIT_ROTATION = 'Radians';
+
+/**@constant {number}  */
+KEPLER.DEGREE = 0.0174533;
+
+/**@constant {number}  */
+KEPLER.PI = Math.PI;
