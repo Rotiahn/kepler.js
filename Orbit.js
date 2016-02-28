@@ -9,6 +9,9 @@
  * @param {number}      rotI        - The inclination of the orbit (rotation of plane from horizontal)
  * @param {number}      rotW        - The Argument of perifocus (rotation of orbit around normal of its inclined plane)
  * @param {number}      rotOmeg     - The Longitude of Ascending Node (rotation of orbital plane around vertical axis)
+ * @example
+ * //returns circular orbit of earth
+ * var earthOrbit = new KEPLER.Orbit({mass:KEPLER.SOL_MASS},KEPLER.AU,0,0,0,0);
  * @module kepler
  */
 
@@ -44,12 +47,12 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
     */
 
     //mandatory to define position at point in time.
-    var a           = a;
-    var ecc         = ecc;
-    var mAnomaly    = mAnomaly;
-    var rotI        = rotI;
-    var rotW        = rotW;
-    var rotOmeg     = rotOmeg;
+    var a           = a;        // Semi-major Axis
+    var ecc         = ecc;      // Eccentricity
+    var mAnomaly    = mAnomaly; // M, Mean Anomaly
+    var rotI        = rotI;     // angle of inclination
+    var rotW        = rotW;     // angle of argument of periapsis
+    var rotOmeg     = rotOmeg;  // angle of longitude of ascending node
 
     //mandatory additional for defining position over time:
     var mu          = KEPLER.G * this.primary.mass;
@@ -59,9 +62,9 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
     var apo         = 0;
     var T           = 0;
     var meanMotion  = 0;
-  //var tAnomaly    = 0; // (rad)   True anomaly, nu                    ;
-    var periT       = 0;
-  //var E           = 0; // (rad)   Eccentric anomaly                   ;
+    var tAnomaly    = 0; // (rad)   True anomaly, nu                    ;
+    var periT       = 0; // (s)     time since periapsis, t-t0
+    var E           = 0; // (rad)   Eccentric anomaly                   ;
 
     //NOTES:
     //1. By definition, a (semi-major axis) is undefined for parabolic orbits.
@@ -132,6 +135,50 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
         } // parabolic or hyperbolic
 
     };
+    /** Calculate True Anomaly
+    * @function calculateTAnomaly
+    * @returns {number} tAnomaly - (rad) True anomaly, nu
+    * @private
+    */
+    var calculateTAnomaly = function() {
+        if (ecc === 0) {
+            return mAnomaly;
+        } // circular
+        else if (ecc < 1) {
+            E = calculateE();
+            var tAnomaly = 2 * Math.atan2( Math.sqrt( (1+e) )* Math.sin( E/2 ) , Math.sqrt( (1-e) )* Math.cos( E/2 ) );  //https://en.wikipedia.org/wiki/True_anomaly
+            return tAnomaly;
+        } // eliptical
+        else if (ecc === 1) {
+            //var periT = Math.pow( ( (2*a*a*a)/(mu) ) , 0.5) * mAnomaly        //http://www.bogan.ca/orbits/kepler/orbteqtn.html
+            //var peri  = a;                                                    //see Note 1 above
+            //var A = (3/2) * Math.sqrt(mu / (2 * peri*peri*peri ) ) * (periT)  //https://en.wikipedia.org/wiki/Parabolic_trajectory#Barker.27s_equation
+            //var B = Math.cbrt( A + Math.sqrt( (A*A) + 1 ) )                   //https://en.wikipedia.org/wiki/Parabolic_trajectory#Barker.27s_equation
+            //var tAnomaly = 2 * arctan (B - 1/B)                               //https://en.wikipedia.org/wiki/Parabolic_trajectory#Barker.27s_equation
+
+            //var mu2p3 = mu/(2*peri*peri*per)
+
+            //var periT = Math.sqrt( 1/mu2p3 ) * mAnomaly
+            //var periT = mAnomaly / Math.sqrt( mu2p3 )
+
+            //var A = (3/2) * Math.sqrt( mu2p3 ) * (mAnomaly / Math.sqrt( mu2p3 ) )
+            //var A = (3/2) * mAnomaly
+            var A = (3/2) * mAnomaly;
+            var B = Math.cbrt(  A + Math.sqrt( (A*A) + 1 )  );
+            var tAnomaly = 2 * Math.atan( B - (1/B) );
+
+            return tAnomaly;
+        } // parabolic
+        else if (ecc >= 1) {
+            // cosh(F) = (ecc + cos(tAnomaly)) / (1+ecc*cos(tAnomaly))          //http://www.bogan.ca/orbits/kepler/orbteqtn.html
+            //Using analogous method as elliptical solution
+            E = calculateE();
+            var tanh_tAnomaly =  Math.sqrt( (1+e) )* Math.sin( E/2 ) / Math.sqrt( (1-e) )* Math.cos( E/2 )
+            var tAnomaly = 2 * Math.atanh(tanh_tAnomaly);
+            return tAnomaly;
+        } // hyperbolic
+
+    }
     /** Calculate Time of Periapsis
     * @function calculatePeriT
     * @returns {number} periT - (s) Time of periapsis
@@ -149,17 +196,71 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
         } // hyperbolic
 
     };
+    /** Calculate Eccentric anomaly
+    * @function calculateE
+    * @returns {number} E - (rad)   Eccentric anomaly
+    * @private
+    */
+    var calculateE = function() {
+        if (ecc === 0) {
+            return mAnomaly;
+        } // circular
+        else if (ecc < 1) {     // per guidance from Markus
+            var E = M;
+            while (Math.abs(E - (ecc * Math.sin(E)) - M) > 0.0000000001) {
+                E-= (E - ecc * Math.sin(E) - M) / (1 - ecc * Math.cos(E));
+            }
+            return E;
+        } // eliptical
+        else if (ecc = 1) {
+            //D = tan(tAnomaly/2);
+            tAnomaly = calculateTAnomaly();
+            var D = Math.tan(tAnomaly/2);
+            return D;
+            ;
+        } // parabolic
+        else if (ecc >= 1) {
+            //M = ecc * sinh(F) - F
+            //0 = ecc * sinh(F) - F - M
+            var F = M;
+            while (Math.abs((ecc * Math.sinh(F)) - F - M) > 0.0000000001) {
+                F-= (ecc * Math.sinh(F) - M) / (ecc * Math.cosh(F) - 1);
+            }
+            return F;
+            ;
+        } // hyperbolic
 
-    /** Update all derivable elements
-    * @function updateElements
+    };
+
+    /** Update single element
+    * @member {object} updateElement
+    * @example
+    * //updates E (eccentric anomaly)
+    * this.updateElement['E']()
     * @public
     */
-    this.updateElements = function() {
-        peri        = calculatePeri();
-        apo         = calculateApo();
-        T           = calculateT();
-        meanMotion  = calculateMeanMotion();
-        periT       = calculatePeriT();
+    this.updateElement = {
+         peri        : function() {peri       = calculatePeri();      }
+        ,apo         : function() {apo        = calculateApo();       }
+        ,T           : function() {T          = calculateT();         }
+        ,meanMotion  : function() {meanMotion = calculateMeanMotion();}
+        ,tAnomaly    : function() {tAnomaly   = calculateTAnomaly();  }
+        ,periT       : function() {periT      = calculatePeriT();     }
+        ,E           : function() {E          = calculateE();         }
+
+    };
+    /** Update all derivable elements
+    * @function updateAllElements
+    * @public
+    */
+    this.updateAllElements = function() {
+        self.updateElement.peri();
+        self.updateElement.apo();
+        self.updateElement.T();
+        self.updateElement.meanMotion();
+        self.updateElement.tAnomaly();
+        self.updateElement.periT();
+        self.updateElement.E();
     };
 
 
@@ -171,7 +272,7 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
     * @public
     */
     this.getElements = function() {
-        this.updateElements();
+        this.updateAllElements();
         var retObject = {
              a          :a
             ,ecc        :ecc
@@ -184,7 +285,9 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
             ,apo        :apo
             ,T          :T
             ,meanMotion :meanMotion
+            ,tAnomaly   :tAnomaly
             ,periT      :periT
+            ,E          :E
         };
         return retObject;
     }
