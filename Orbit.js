@@ -292,6 +292,47 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
         return retObject;
     }
 
+    /** Get Cartesian position (x,y,z)
+    * @function getPosition
+    * @param {number} time - the time (in seconds) to identify the position of the orbit.
+    * @returns {KEPLER.Vector3} - Returns a KEPLER.Vector3 which defines the position in the orbit (RELATIVE TO PRIMARY)
+    * @see {@link http://microsat.sm.bmstu.ru/e-library/Ballistics/kepler.pdf}
+    * @public
+    */
+    this.getPosition = function(time) {//Get
+
+        //Part I: Update Orbital Elements
+        //this.updateAllElements();
+        this.updateElement.E();
+
+        //Part II: Create initial elipse
+        var position = new KEPLER.Vector3(
+             a*Math.cos(E) -a*ecc
+            ,a*Math.sqrt(1-(ecc*ecc))*Math.sin(E)
+            ,0
+        );
+
+        //Part III: Conduct rotations (reversed):
+        //NOTE: XY plane is the (typical) plane of reference with X+ axis = reference direction and Z+ axis = "north"
+
+        //Part III.A: Rotate orbital plane around z world-axis by angle -rot_omeg so that ascending node lines up with reference direction
+        var axis_omeg = new KEPLER.Vector3(0,0,1);
+        var matrix_omeg = new KEPLER.Matrix4().makeRotationAxis( axis_omeg, -rot_omeg);
+        position.applyMatrix4(matrix_omeg);
+
+        //Part III.B: Rotate orbital plane around x world-axis by angle -rot_i so that orbital plane lines up with reference plane
+        var axis_i = new KEPLER.Vector3(1,0,0);
+        var matrix_i = new KEPLER.Matrix4().makeRotationAxis( axis_i, -rot_i);
+        position.applyMatrix4(matrix_i);
+
+        //Part III.C: Rotate orbit around z world-axis by angle -rot_w so that periapsis lines up with reference direction
+        var axis_w = new KEPLER.Vector3(0,0,1);
+        var matrix_w = new KEPLER.Matrix4().makeRotationAxis( axis_w, -rot_w);
+        position.applyMatrix4(matrix_w);
+
+         return position;
+    }
+
 } //end of KEPLER.Orbit()
 
 //KEPLER.NULL_ORBIT = new KEPLER.Orbit({mass:0},0,0,0,0,0);
