@@ -329,7 +329,7 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
     * @see {@link http://microsat.sm.bmstu.ru/e-library/Ballistics/kepler.pdf}
     * @public
     */
-    this.getPosition = function(time) {//Get
+    this.getPosition = function() {
 
         //Part I: Update Orbital Elements
         //this.updateAllElements();
@@ -343,25 +343,38 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
         );
 
         //Part III: Conduct rotations (reversed):
-        //NOTE: XY plane is the (typical) plane of reference with X+ axis = reference direction and Z+ axis = "north"
+        var positionFinal = reverseRotations(position);
 
-        //Part III.A: Rotate orbital plane around z world-axis by angle -rot_omeg so that ascending node lines up with reference direction
-        var axis_omeg = new KEPLER.Vector3(0,0,1);
-        var matrix_omeg = new KEPLER.Matrix4().makeRotationAxis( axis_omeg, -rot_omeg);
-        position.applyMatrix4(matrix_omeg);
-
-        //Part III.B: Rotate orbital plane around x world-axis by angle -rot_i so that orbital plane lines up with reference plane
-        var axis_i = new KEPLER.Vector3(1,0,0);
-        var matrix_i = new KEPLER.Matrix4().makeRotationAxis( axis_i, -rot_i);
-        position.applyMatrix4(matrix_i);
-
-        //Part III.C: Rotate orbit around z world-axis by angle -rot_w so that periapsis lines up with reference direction
-        var axis_w = new KEPLER.Vector3(0,0,1);
-        var matrix_w = new KEPLER.Matrix4().makeRotationAxis( axis_w, -rot_w);
-        position.applyMatrix4(matrix_w);
-
-         return position;
+        return positionFinal;
     }
+
+    /** Get Cartesian velocity (x,y,z)
+    * @function getVelocity
+    * @param {number} time - the time (in seconds) to identify the position of the orbit.
+    * @returns {KEPLER.Vector3} - Returns a KEPLER.Vector3 which defines the position in the orbit (RELATIVE TO PRIMARY)
+    * @see {@link http://microsat.sm.bmstu.ru/e-library/Ballistics/kepler.pdf}
+    * @public
+    */
+    this.getVelocity = function() {
+
+        //Part I: Update Orbital Elements
+        //this.updateAllElements();
+        this.updateElement.E();
+        this.updateElement.meanMotion();
+
+        //Part II: Create initial elipse
+        var velocity = new KEPLER.Vector3(
+             ( (meanMotion*a)/( 1-(ecc*Math.cos(E)) ) )*( -Math.sin(E) )
+            ,( (meanMotion*a)/( 1-(ecc*Math.cos(E)) ) )*( Math.sqrt(1-(ecc*ecc))*Math.cos(E) )
+            ,0
+        );
+
+        //Part III: Conduct rotations (reversed):
+        var velocityFinal = reverseRotations(velocity);
+
+         return velocityFinal;
+    }
+
 
 } //end of KEPLER.Orbit()
 
