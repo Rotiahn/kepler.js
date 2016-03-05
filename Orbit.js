@@ -306,20 +306,20 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
     var reverseRotations = function (vector) {
         //NOTE: XY plane is the (typical) plane of reference with X+ axis = reference direction and Z+ axis = "north"
 
-        //Part I: Rotate orbital plane around z world-axis by angle -rot_omeg so that ascending node lines up with reference direction
-        var axis_omeg = new KEPLER.Vector3(0,0,1);
-        var matrix_omeg = new KEPLER.Matrix4().makeRotationAxis( axis_omeg, -rot_omeg);
-        vector.applyMatrix4(matrix_omeg);
+        //Part I: Rotate orbital plane around z world-axis by angle -rotOmeg so that ascending node lines up with reference direction
+        var axisOmeg = new KEPLER.Vector3(0,0,1);
+        var matrixOmeg = new KEPLER.Matrix4().makeRotationAxis( axisOmeg, -rotOmeg);
+        vector.applyMatrix4(matrixOmeg);
 
-        //Part II: Rotate orbital plane around x world-axis by angle -rot_i so that orbital plane lines up with reference plane
-        var axis_i = new KEPLER.Vector3(1,0,0);
-        var matrix_i = new KEPLER.Matrix4().makeRotationAxis( axis_i, -rot_i);
-        vector.applyMatrix4(matrix_i);
+        //Part II: Rotate orbital plane around x world-axis by angle -rotI so that orbital plane lines up with reference plane
+        var axisI = new KEPLER.Vector3(1,0,0);
+        var matrixI = new KEPLER.Matrix4().makeRotationAxis( axisI, -rotI);
+        vector.applyMatrix4(matrixI);
 
-        //Part III: Rotate orbit around z world-axis by angle -rot_w so that periapsis lines up with reference direction
-        var axis_w = new KEPLER.Vector3(0,0,1);
-        var matrix_w = new KEPLER.Matrix4().makeRotationAxis( axis_w, -rot_w);
-        vector.applyMatrix4(matrix_w);
+        //Part III: Rotate orbit around z world-axis by angle -rotW so that periapsis lines up with reference direction
+        var axisW = new KEPLER.Vector3(0,0,1);
+        var matrixW = new KEPLER.Matrix4().makeRotationAxis( axisW, -rotW);
+        vector.applyMatrix4(matrixW);
 
         return vector;
     }
