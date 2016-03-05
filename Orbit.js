@@ -146,7 +146,7 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
         } // circular
         else if (ecc < 1) {
             E = calculateE();
-            var tAnomaly = 2 * Math.atan2( Math.sqrt( (1+e) )* Math.sin( E/2 ) , Math.sqrt( (1-e) )* Math.cos( E/2 ) );  //https://en.wikipedia.org/wiki/True_anomaly
+            var tAnomaly = 2 * Math.atan2( Math.sqrt( (1+ecc) )* Math.sin( E/2 ) , Math.sqrt( (1-ecc) )* Math.cos( E/2 ) );  //https://en.wikipedia.org/wiki/True_anomaly
             return tAnomaly;
         } // eliptical
         else if (ecc === 1) {
@@ -173,7 +173,7 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
             // cosh(F) = (ecc + cos(tAnomaly)) / (1+ecc*cos(tAnomaly))          //http://www.bogan.ca/orbits/kepler/orbteqtn.html
             //Using analogous method as elliptical solution
             E = calculateE();
-            var tanh_tAnomaly =  Math.sqrt( (1+e) )* Math.sin( E/2 ) / Math.sqrt( (1-e) )* Math.cos( E/2 )
+            var tanh_tAnomaly =  Math.sqrt( (1+ecc) )* Math.sin( E/2 ) / Math.sqrt( (1-ecc) )* Math.cos( E/2 )
             var tAnomaly = 2 * Math.atanh(tanh_tAnomaly);
             return tAnomaly;
         } // hyperbolic
@@ -206,6 +206,7 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
             return mAnomaly;
         } // circular
         else if (ecc < 1) {     // per guidance from Markus
+            var M = mAnomaly;
             var E = M;
             while (Math.abs(E - (ecc * Math.sin(E)) - M) > 0.0000000001) {
                 E-= (E - ecc * Math.sin(E) - M) / (1 - ecc * Math.cos(E));
@@ -220,6 +221,7 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
             ;
         } // parabolic
         else if (ecc >= 1) {
+            var M = mAnomaly;
             //M = ecc * sinh(F) - F
             //0 = ecc * sinh(F) - F - M
             var F = M;
@@ -240,13 +242,13 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
     * @public
     */
     this.updateElement = {
-         peri        : function() {peri       = calculatePeri();      }
-        ,apo         : function() {apo        = calculateApo();       }
-        ,T           : function() {T          = calculateT();         }
-        ,meanMotion  : function() {meanMotion = calculateMeanMotion();}
-        ,tAnomaly    : function() {tAnomaly   = calculateTAnomaly();  }
-        ,periT       : function() {periT      = calculatePeriT();     }
-        ,E           : function() {E          = calculateE();         }
+         peri        : function() {peri       = calculatePeri();      return peri      ;}
+        ,apo         : function() {apo        = calculateApo();       return apo       ;}
+        ,T           : function() {T          = calculateT();         return T         ;}
+        ,meanMotion  : function() {meanMotion = calculateMeanMotion();return meanMotion;}
+        ,tAnomaly    : function() {tAnomaly   = calculateTAnomaly();  return tAnomaly  ;}
+        ,periT       : function() {periT      = calculatePeriT();     return periT     ;}
+        ,E           : function() {E          = calculateE();         return E         ;}
 
     };
     /** Update all derivable elements
@@ -254,13 +256,13 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
     * @public
     */
     this.updateAllElements = function() {
-        self.updateElement.peri();
-        self.updateElement.apo();
-        self.updateElement.T();
-        self.updateElement.meanMotion();
-        self.updateElement.tAnomaly();
-        self.updateElement.periT();
-        self.updateElement.E();
+        this.updateElement.peri();
+        this.updateElement.apo();
+        this.updateElement.T();
+        this.updateElement.meanMotion();
+        this.updateElement.tAnomaly();
+        this.updateElement.periT();
+        this.updateElement.E();
     };
 
 
