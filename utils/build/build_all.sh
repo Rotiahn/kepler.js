@@ -44,6 +44,8 @@ do
 done
 echo $count
 
-
-
 #Build Minimized 
+
+java -jar "$BASEDIR/utils/build/Compiler/compiler.jar" "$BASEDIR/kepler.js" \
+--jscomp_off=globalThis --jscomp_off=checkTypes \
+--js_output_file "$BASEDIR/kepler.min.js"

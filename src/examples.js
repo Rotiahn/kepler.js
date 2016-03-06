@@ -5,7 +5,7 @@
 
 var EXAMPLE = {};
 
-EXAMPLE.Sol = new KEPLER.AstroBody(KEPLER.SOL);
+EXAMPLE.Sol = new KEPLER.AstroBody(KEPLER.SOL_MASS);
 
 EXAMPLE.Earth = new KEPLER.AstroBody(5.97219e24);
 EXAMPLE.Earth.orbit = new KEPLER.Orbit(
