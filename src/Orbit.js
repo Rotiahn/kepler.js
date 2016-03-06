@@ -387,8 +387,18 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
         //deltaMAnomaly = (deltaTime*meanMotion)%(2PI)
         this.updateElement.meanMotion(); // (rad/s)
         var deltaMAnomaly = ( deltaTime * meanMotion ) % (2 * KEPLER.PI);  // ( (s) * (rad/s) ) % (rad)
-        mAnomaly = mAnomaly + deltaMAnomaly;  // (rad)
-        return mAnomaly;
+        mAnomaly = ( (mAnomaly+deltaMAnomaly)%(2*KEPLER.PI) + (2*KEPLER.PI) )%(2*KEPLER.PI);  // (rad), forces to always be between 0 and 2PI
+        this.updateAllElements();
+        return this;
+    }
+    /** Subtract Time: revolve object backwards in time
+    * @function subTime
+    * @param {number} time - the time (in seconds) to adjust the object's movement
+    * @returns {KEPLER.Orbit} - Returns this KEPLER.Orbit in it's new state after the transition
+    * @public
+    */
+    this.subTime = function(deltaTime) {
+        return this.addTime(-deltaTime);
     }
 
 } //end of KEPLER.Orbit()
