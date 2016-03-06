@@ -10,6 +10,7 @@ export EXTERNALDIR="$BASEDIR/src/external"
 FILELIST=(
     "$SRCDIR/Kepler.js"                         #Base KEPLER file
 
+    "$EXTERNALDIR/three.js/Three.js"            #THREE.JS
     "$EXTERNALDIR/three.js/math/Matrix4.js"     #THREE.JS
     "$EXTERNALDIR/three.js/math/Vector3.js"     #THREE.JS
     "$EXTERNALDIR/external.js"                  #external renaming to KEPLER
