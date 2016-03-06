@@ -7,7 +7,7 @@
  * @namespace kepler
  */
 
-var KEPLER = { VERSION: '0.0.1' };
+var KEPLER = { VERSION: '0.0.3' };
 
 
 //CONSTANTS
@@ -1901,8 +1901,6 @@ KEPLER.AstroBody = function(mass) {
  * var earthOrbit = new KEPLER.Orbit({mass:KEPLER.SOL_MASS},KEPLER.AU,0,0,0,0);
  * @module kepler
  */
-
-
 KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
 	//This is an object which represents an orbit for an AstroBody
 
@@ -1999,7 +1997,7 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
     * @returns {number} T - (s) The period (sidereal Year) for the orbit.
     * @private
     */
-   var calculateT = function() {
+    var calculateT = function() {
         if (ecc < 1) {
             return 2 * KEPLER.PI * Math.pow( ( (a*a*a)/(mu) ) , 0.5);
         } // circular or eliptical
@@ -2153,7 +2151,7 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
     };
 
 
-    //get functions
+    //Part III: Get Functions
 
     /** Get all orbital Elements
     * @function getElements
@@ -2210,7 +2208,6 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
 
         return vector;
     }
-
     /** Get Cartesian position (x,y,z)
     * @function getPosition
     * @param {number} time - the time (in seconds) to identify the position of the orbit.
@@ -2236,7 +2233,6 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
 
         return positionFinal;
     }
-
     /** Get Cartesian velocity (x,y,z)
     * @function getVelocity
     * @param {number} time - the time (in seconds) to identify the position of the orbit.
@@ -2264,6 +2260,33 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
          return velocityFinal;
     }
 
+
+    //Part III: Update Functions
+
+    /** Add Time: revolve object forward in time
+    * @function addTime
+    * @param {number} time - the time (in seconds) to adjust the object's movement
+    * @returns {KEPLER.Orbit} - Returns this KEPLER.Orbit in it's new state after the transition
+    * @public
+    */
+    this.addTime = function(deltaTime) {
+        //Adding Time can be completely accomplished with updating the mean Anomaly (mAnomaly) with a new value.
+        //deltaMAnomaly = (deltaTime*meanMotion)%(2PI)
+        this.updateElement.meanMotion(); // (rad/s)
+        var deltaMAnomaly = ( deltaTime * meanMotion ) % (2 * KEPLER.PI);  // ( (s) * (rad/s) ) % (rad)
+        mAnomaly = ( (mAnomaly+deltaMAnomaly)%(2*KEPLER.PI) + (2*KEPLER.PI) )%(2*KEPLER.PI);  // (rad), forces to always be between 0 and 2PI
+        this.updateAllElements();
+        return this;
+    }
+    /** Subtract Time: revolve object backwards in time
+    * @function subTime
+    * @param {number} time - the time (in seconds) to adjust the object's movement
+    * @returns {KEPLER.Orbit} - Returns this KEPLER.Orbit in it's new state after the transition
+    * @public
+    */
+    this.subTime = function(deltaTime) {
+        return this.addTime(-deltaTime);
+    }
 
 } //end of KEPLER.Orbit()
 
