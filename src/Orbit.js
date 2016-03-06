@@ -323,7 +323,7 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
     }
     /** Get Cartesian position (x,y,z)
     * @function getPosition
-    * @returns {KEPLER.Vector3} - Returns a KEPLER.Vector3 which defines the position in the orbit (RELATIVE TO PRIMARY)
+    * @returns {KEPLER.Vector3} - Returns a KEPLER.Vector3 which defines the position in the orbit (INCORPORATES PRIMARY)
     * @see {@link http://microsat.sm.bmstu.ru/e-library/Ballistics/kepler.pdf}
     * @public
     */
@@ -343,11 +343,14 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
         //Part III: Conduct rotations (reversed):
         var positionFinal = reverseRotations(position);
 
+        //Part IV: Add position vector of primary:
+        positionFinal.add(this.primary.orbit.getPosition());
+
         return positionFinal;
     }
     /** Get Cartesian velocity (x,y,z)
     * @function getVelocity
-    * @returns {KEPLER.Vector3} - Returns a KEPLER.Vector3 which defines the position in the orbit (RELATIVE TO PRIMARY)
+    * @returns {KEPLER.Vector3} - Returns a KEPLER.Vector3 which defines the position in the orbit (INCORPORATES PRIMARY)
     * @see {@link http://microsat.sm.bmstu.ru/e-library/Ballistics/kepler.pdf}
     * @public
     */
@@ -367,6 +370,9 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
 
         //Part III: Conduct rotations (reversed):
         var velocityFinal = reverseRotations(velocity);
+
+        //Part IV: Add position vector of primary:
+        velocityFinal.add(this.primary.orbit.getVelocity());
 
          return velocityFinal;
     }
