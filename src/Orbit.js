@@ -323,7 +323,6 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
     }
     /** Get Cartesian position (x,y,z)
     * @function getPosition
-    * @param {number} time - the time (in seconds) to identify the position of the orbit.
     * @returns {KEPLER.Vector3} - Returns a KEPLER.Vector3 which defines the position in the orbit (RELATIVE TO PRIMARY)
     * @see {@link http://microsat.sm.bmstu.ru/e-library/Ballistics/kepler.pdf}
     * @public
@@ -348,7 +347,6 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
     }
     /** Get Cartesian velocity (x,y,z)
     * @function getVelocity
-    * @param {number} time - the time (in seconds) to identify the position of the orbit.
     * @returns {KEPLER.Vector3} - Returns a KEPLER.Vector3 which defines the position in the orbit (RELATIVE TO PRIMARY)
     * @see {@link http://microsat.sm.bmstu.ru/e-library/Ballistics/kepler.pdf}
     * @public
@@ -403,10 +401,20 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
 
 } //end of KEPLER.Orbit()
 
+/** A Class to represent an Null Orbit, representing the center and root of the system tree.
+ * @author Rotiahn / https://github.com/Rotiahn/
+ * @class
+ * classdesc Orbit is a class for defining orbit parameters and characteristics useful to all AstroBodys
+ * @augments KEPLER.Orbit
+ * @example
+ * //returns Null Orbit center of system
+ * var nullOrbit = new KEPLER.NULL_ORBIT();
+ * @module kepler
+ */
 KEPLER.NULL_ORBIT = function() {
 
     //mandatory to define position at point in time.
-    this.primary    = {mass:1}  // Placeholder mass
+    this.primary    = {mass:1}  // Placeholder mass, cannot be 0 or NaN errors appear
     var a           = 0;        // Semi-major Axis
     var ecc         = 0;        // Eccentricity
     var mAnomaly    = 0;        // M, Mean Anomaly
@@ -415,6 +423,28 @@ KEPLER.NULL_ORBIT = function() {
     var rotOmeg     = 0;        // angle of longitude of ascending node
 
     KEPLER.Orbit.call(this,this.primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg);
+
+    /** Get Cartesian position (x,y,z)
+    * @function getPosition
+    * @returns {KEPLER.Vector3} - Returns a KEPLER.Vector3(0,0,0).  Always returns null vector.
+    * @see {@link http://microsat.sm.bmstu.ru/e-library/Ballistics/kepler.pdf}
+    * @public
+    */
+    this.getPosition = function() {
+        var position = new KEPLER.Vector3(0,0,0);
+        return position;
+    }
+    /** Get Cartesian velocity (x,y,z)
+    * @function getVelocity
+    * @returns {KEPLER.Vector3} - Returns a KEPLER.Vector3(0,0,0).  Always returns null vector.
+    * @see {@link http://microsat.sm.bmstu.ru/e-library/Ballistics/kepler.pdf}
+    * @public
+    */
+    this.getVelocity = function() {
+        var velocity = new KEPLER.Vector3(0,0,0);
+         return velocity;
+    }
+
 
     this.updateAllElements();
 
