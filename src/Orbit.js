@@ -403,4 +403,20 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
 
 } //end of KEPLER.Orbit()
 
-//KEPLER.NULL_ORBIT = new KEPLER.Orbit({mass:0},0,0,0,0,0);
+KEPLER.NULL_ORBIT = function() {
+
+    //mandatory to define position at point in time.
+    this.primary    = {mass:1}  // Placeholder mass
+    var a           = 0;        // Semi-major Axis
+    var ecc         = 0;        // Eccentricity
+    var mAnomaly    = 0;        // M, Mean Anomaly
+    var rotI        = 0;        // angle of inclination
+    var rotW        = 0;        // angle of argument of periapsis
+    var rotOmeg     = 0;        // angle of longitude of ascending node
+
+    KEPLER.Orbit.call(this,this.primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg);
+
+    this.updateAllElements();
+
+}
+KEPLER.NULL_ORBIT.prototype = Object.create(KEPLER.Orbit.prototype);
