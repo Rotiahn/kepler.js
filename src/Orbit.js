@@ -344,7 +344,7 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
         var positionFinal = reverseRotations(position);
 
         //Part IV: Add position vector of primary:
-        positionFinal.add(this.primary.orbit.getPosition());
+        positionFinal.add(this.primary.getPosition());
 
         return positionFinal;
     }
@@ -372,7 +372,7 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
         var velocityFinal = reverseRotations(velocity);
 
         //Part IV: Add position vector of primary:
-        velocityFinal.add(this.primary.orbit.getVelocity());
+        velocityFinal.add(this.primary.getVelocity());
 
          return velocityFinal;
     }
