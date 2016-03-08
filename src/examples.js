@@ -52,7 +52,7 @@ EXAMPLE.Earth = new KEPLER.AstroBody(
 );
 
 EXAMPLE.Moon = new KEPLER.AstroBody(
-    734.9e20
+    734.9e20                                //mass
     ,new KEPLER.Orbit(
         EXAMPLE.Earth                       //Primary
         ,3.812186882902056e5*KEPLER.KM      //a
@@ -65,7 +65,7 @@ EXAMPLE.Moon = new KEPLER.AstroBody(
 );
 
 EXAMPLE.Mars = new KEPLER.AstroBody(
-    6.4185e23
+    6.4185e23                               //mass
     ,new KEPLER.Orbit(
         EXAMPLE.Sol                         //Primary
         ,1.523678184302188e+00*KEPLER.AU    //a
@@ -78,10 +78,10 @@ EXAMPLE.Mars = new KEPLER.AstroBody(
 );
 
 EXAMPLE.Phobos = new KEPLER.AstroBody(
-    1.08e20
+    1.08e20                                 //mass
     ,new KEPLER.Orbit(
         EXAMPLE.Mars                        //Primary
-        ,9.378286882214712e+03*KEPLER.KM      //a
+        ,9.378286882214712e+03*KEPLER.KM    //a
         ,1.541577713745092e-02              //ecc
         ,3.458103658779790e+02*KEPLER.DEGREE//mAnomaly
         ,2.605134469392531e+01*KEPLER.DEGREE//rotI
@@ -94,7 +94,7 @@ EXAMPLE.Deimos = new KEPLER.AstroBody(
     1.80e20
     ,new KEPLER.Orbit(
         EXAMPLE.Mars                        //Primary
-        ,2.345888830758717e+04*KEPLER.KM      //a
+        ,2.345888830758717e+04*KEPLER.KM    //a
         ,2.419395670375644e-04              //ecc
         ,2.441640161731743e+02*KEPLER.DEGREE//mAnomaly
         ,2.757017394063173e+01*KEPLER.DEGREE//rotI
