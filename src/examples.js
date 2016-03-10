@@ -8,12 +8,14 @@
 var EXAMPLE = {};
 
 EXAMPLE.Sol = new KEPLER.AstroBody(
-    KEPLER.SOL_MASS
+     'Sol'
+    ,KEPLER.SOL_MASS
     ,new KEPLER.NULL_ORBIT()
 );
 
 EXAMPLE.Mercury = new KEPLER.AstroBody(
-    3.302e23                                //mass
+     'Mercury'
+    ,3.302e23                                //mass
     ,new KEPLER.Orbit(
         EXAMPLE.Sol                         //Primary
         ,3.870982252717257e-01*KEPLER.AU    //a
@@ -26,7 +28,8 @@ EXAMPLE.Mercury = new KEPLER.AstroBody(
 );
 
 EXAMPLE.Venus = new KEPLER.AstroBody(
-    4.8685e24                               //mass
+     'Venus'
+    ,4.8685e24                               //mass
     ,new KEPLER.Orbit(
         EXAMPLE.Sol                         //Primary
         ,7.233268496749391e-01*KEPLER.AU    //a
@@ -39,7 +42,8 @@ EXAMPLE.Venus = new KEPLER.AstroBody(
 );
 
 EXAMPLE.Earth = new KEPLER.AstroBody(
-    5.97219e24                               //mass
+     'Earth'
+    ,5.97219e24                               //mass
     ,new KEPLER.Orbit(
         EXAMPLE.Sol                         //Primary
         ,1.000371833989169e+00*KEPLER.AU    //a
@@ -51,8 +55,9 @@ EXAMPLE.Earth = new KEPLER.AstroBody(
     )
 );
 
-EXAMPLE.Moon = new KEPLER.AstroBody(
-    734.9e20                                //mass
+EXAMPLE.Luna = new KEPLER.AstroBody(
+     'Luna'
+    ,734.9e20                                //mass
     ,new KEPLER.Orbit(
         EXAMPLE.Earth                       //Primary
         ,3.812186882902056e5*KEPLER.KM      //a
@@ -65,7 +70,8 @@ EXAMPLE.Moon = new KEPLER.AstroBody(
 );
 
 EXAMPLE.Mars = new KEPLER.AstroBody(
-    6.4185e23                               //mass
+     'Mars'
+    ,6.4185e23                               //mass
     ,new KEPLER.Orbit(
         EXAMPLE.Sol                         //Primary
         ,1.523678184302188e+00*KEPLER.AU    //a
@@ -78,7 +84,8 @@ EXAMPLE.Mars = new KEPLER.AstroBody(
 );
 
 EXAMPLE.Phobos = new KEPLER.AstroBody(
-    1.08e20                                 //mass
+     'Phobos'
+    ,1.08e20                                 //mass
     ,new KEPLER.Orbit(
         EXAMPLE.Mars                        //Primary
         ,9.378286882214712e+03*KEPLER.KM    //a
@@ -91,7 +98,8 @@ EXAMPLE.Phobos = new KEPLER.AstroBody(
 );
 
 EXAMPLE.Deimos = new KEPLER.AstroBody(
-    1.80e20
+     'Deimos'
+    ,1.80e20
     ,new KEPLER.Orbit(
         EXAMPLE.Mars                        //Primary
         ,2.345888830758717e+04*KEPLER.KM    //a

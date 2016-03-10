@@ -23,21 +23,36 @@
  * );
  * @module kepler
  */
-KEPLER.AstroBody = function(mass,orbit) {
+KEPLER.AstroBody = function(id,mass,orbit) {
 
     //Part I: Declare Members
+    /** ID of this AstroBody
+    * @member {string}
+    * @public
+    */
+    this.id = id;
     /** Mass of this AstroBody
     * @member {number}
     * @public
     */
     this.mass = mass;       // (kg)
-
     /** AstroBody's orbit (kept private to avoid direct interaction)
     * @member {KEPLER.Orbit}
     * @private
     */
     var orbit = orbit;
-
+    /** List (Array) of KEPLER.AstroBody listing those AstroBodys which have this AstroBody as a primary
+    * @member {array}
+    * @private
+    */
+    this.satellites = [];
+    /** Primary of AstroBody (The AstroBody around which this AstroBody is orbiting
+    * @member {KEPLER.AstroBody}
+    * @public
+    */
+    this.primary = orbit.primary;
+    //Add this Astrobody as a satellite to its primary
+    this.primary.addSatellite(this);
 
     //Part II: Connect Orbit Functions
 
@@ -61,6 +76,28 @@ KEPLER.AstroBody = function(mass,orbit) {
     this.subTime = function() {
         return orbit.subTime()
     };
+
+    //Part III: AstroBody Functions
+    /** Add satellite
+    * @function addSatellite
+    * @param {KEPLER.AstroBody} satellite
+    * @public
+    */
+    this.addSatellite = function(satellite) {
+        this.satellites.push(satellite);
+    }
+    /** Remove satellite
+    * Only satellites which are pointers to exactly the same object will be removed.
+    * Satellites which are different, but identical values will not be removed
+    * @function removeSatellite
+    * @param {KEPLER.AstroBody} satellite
+    * @public
+    */
+    this.removeSatellite = function(satellite) {
+        this.satellites = this.satellites.filter(function(x) {
+            return x !== satellite;
+        });
+    }
 
 
 }//end of Astro_Body() definition
