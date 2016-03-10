@@ -23,9 +23,14 @@
  * );
  * @module kepler
  */
-KEPLER.AstroBody = function(mass,orbit) {
+KEPLER.AstroBody = function(id,mass,orbit) {
 
     //Part I: Declare Members
+    /** ID of this AstroBody
+    * @member {string}
+    * @public
+    */
+    this.id = id;
     /** Mass of this AstroBody
     * @member {number}
     * @public
