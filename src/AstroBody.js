@@ -31,13 +31,21 @@ KEPLER.AstroBody = function(mass,orbit) {
     * @public
     */
     this.mass = mass;       // (kg)
-
     /** AstroBody's orbit (kept private to avoid direct interaction)
     * @member {KEPLER.Orbit}
     * @private
     */
     var orbit = orbit;
-
+    /** List (Array) of KEPLER.AstroBody listing those AstroBodys which have this AstroBody as a primary
+    * @member {array}
+    * @private
+    */
+    this.satellites = [];
+    /** Primary of AstroBody (The AstroBody around which this AstroBody is orbiting
+    * @member {KEPLER.AstroBody}
+    * @public
+    */
+    this.primary = orbit.primary;
 
     //Part II: Connect Orbit Functions
 
