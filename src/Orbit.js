@@ -451,6 +451,23 @@ KEPLER.NULL_ORBIT = function() {
          return velocity;
     }
 
+    /** Add satellite (NULL_ORBIT, do nothing)
+    * @function addSatellite
+    * @param {KEPLER.AstroBody} satellite
+    * @public
+    */
+    this.primary.addSatellite = function(satellite) {
+
+    }
+    /** Remove satellite (NULL_ORBIT, do nothing)
+    * @function removeSatellite
+    * @param {KEPLER.AstroBody} satellite
+    * @public
+    */
+    this.primary.removeSatellite = function(satellite) {
+
+    }
+
 
     this.updateAllElements();
 

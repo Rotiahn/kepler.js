@@ -79,7 +79,7 @@ KEPLER.AstroBody = function(mass,orbit) {
     * @public
     */
     this.addSatellite = function(satellite) {
-        this.satelites.push(satellite);
+        this.satellites.push(satellite);
     }
     /** Remove satellite
     * Only satellites which are pointers to exactly the same object will be removed.
@@ -89,7 +89,7 @@ KEPLER.AstroBody = function(mass,orbit) {
     * @public
     */
     this.removeSatellite = function(satellite) {
-        this.satelites = this.satelites.filter(function(x) {
+        this.satellites = this.satellites.filter(function(x) {
             return x !== satellite;
         });
     }
