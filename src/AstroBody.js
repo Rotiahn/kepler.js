@@ -46,6 +46,8 @@ KEPLER.AstroBody = function(mass,orbit) {
     * @public
     */
     this.primary = orbit.primary;
+    //Add this Astrobody as a satellite to its primary
+    this.primary.addSatellite(this);
 
     //Part II: Connect Orbit Functions
 
@@ -69,6 +71,28 @@ KEPLER.AstroBody = function(mass,orbit) {
     this.subTime = function() {
         return orbit.subTime()
     };
+
+    //Part III: AstroBody Functions
+    /** Add satellite
+    * @function addSatellite
+    * @param {KEPLER.AstroBody} satellite
+    * @public
+    */
+    this.addSatellite = function(satellite) {
+        this.satelites.push(satellite);
+    }
+    /** Remove satellite
+    * Only satellites which are pointers to exactly the same object will be removed.
+    * Satellites which are different, but identical values will not be removed
+    * @function removeSatellite
+    * @param {KEPLER.AstroBody} satellite
+    * @public
+    */
+    this.removeSatellite = function(satellite) {
+        this.satelites = this.satelites.filter(function(x) {
+            return x !== satellite;
+        });
+    }
 
 
 }//end of Astro_Body() definition
