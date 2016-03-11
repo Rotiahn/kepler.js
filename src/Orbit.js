@@ -83,7 +83,7 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
         if (ecc < 1) {
             return (1 - ecc) * a;
         } // circular or eliptical
-        else if (ecc = 1) {
+        else if (ecc === 1) {
             //See Note 1.
             return a;
         } // parabolic
@@ -186,10 +186,10 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
         if (ecc < 1) {
             return Math.pow( ( (a*a*a)/(mu) ) , 0.5) * mAnomaly;
         } // circular or eliptical
-        else if (ecc = 1) {
+        else if (ecc === 1) {
             return Math.pow( ( (2*a*a*a)/(mu) ) , 0.5) * mAnomaly;
         } // parabolic
-        else if (ecc >= 1) {
+        else if (ecc > 1) {
             return Math.pow( ( ((-a)*(-a)*(-a))/(mu) ) , 0.5) * mAnomaly;
         } // hyperbolic
 
@@ -211,14 +211,14 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
             }
             return E;
         } // eliptical
-        else if (ecc = 1) {
+        else if (ecc === 1) {
             //D = tan(tAnomaly/2);
             tAnomaly = calculateTAnomaly();
             var D = Math.tan(tAnomaly/2);
             return D;
             ;
         } // parabolic
-        else if (ecc >= 1) {
+        else if (ecc > 1) {
             var M = mAnomaly;
             //M = ecc * sinh(F) - F
             //0 = ecc * sinh(F) - F - M
