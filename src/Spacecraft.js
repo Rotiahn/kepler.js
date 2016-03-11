@@ -17,3 +17,4 @@ KEPLER.Spacecraft = function(id,mass,fuel,exhaustV,orbit) {
     //Part II: Spacecraft Specifics
 
 }
+KEPLER.Spacecraft.prototype = Object.create(KEPLER.AstroBody.prototype);
