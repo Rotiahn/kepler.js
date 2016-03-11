@@ -17,6 +17,7 @@ FILELIST=(
 
     "$SRCDIR/AstroBody.js"                      #Astrobody
     "$SRCDIR/Orbit.js"                          #Orbit
+    "$SRCDIR/Spacecraft.js"                     #Spacecraft
 
     "$SRCDIR/examples.js"                       
 )
