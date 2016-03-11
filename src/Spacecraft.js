@@ -37,7 +37,6 @@ KEPLER.Spacecraft = function(id,mass,fuelMax,exhaustV,orbit) {
     */
     var exhaustV = exhaustV;
 
-
     //Part III: Add Spacecraft functions
 
     /** Add Fuel to fuel tank
@@ -120,10 +119,5 @@ KEPLER.Spacecraft = function(id,mass,fuelMax,exhaustV,orbit) {
         this.deltaV = deltaV ;  // m/s
         return true;
     }
-
-
-
-
-
 }
 KEPLER.Spacecraft.prototype = Object.create(KEPLER.AstroBody.prototype);

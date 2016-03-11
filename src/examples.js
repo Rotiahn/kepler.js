@@ -111,3 +111,19 @@ EXAMPLE.Deimos = new KEPLER.AstroBody(
     )
 );
 
+
+EXAMPLE.voyager1 = new KEPLER.Spacecraft(
+     'Deimos'                               //id
+    ,722                                    //mass
+    ,10                                     //fuelMax
+    ,3369                                   //exhaustV
+    ,new KEPLER.Orbit(
+        EXAMPLE.Sol                        //Primary
+        ,-3.220924861390099E+00*KEPLER.AU    //a
+        ,3.707585664603564E+00              //ecc
+        ,1.248081698810124E+03*KEPLER.DEGREE//mAnomaly
+        ,3.581757543323521E+01*KEPLER.DEGREE//rotI
+        ,3.379563327150580E+02*KEPLER.DEGREE//rotW
+        ,1.792513338910511E+02*KEPLER.DEGREE//rotOmeg
+    )
+);
