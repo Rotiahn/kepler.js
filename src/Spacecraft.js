@@ -49,11 +49,11 @@ KEPLER.Spacecraft = function(id,mass,fuelMax,exhaustV,orbit) {
         var currentFuel = this.fuel.value;
         if (currentFuel+amount > fuelMax) { //Check if we can hold this much fuel
             throw 'Cannot add more fuel to '+this.id+', fuel Capacity Exceeded. Fuel Tank Size: '+fuelMax+' kg';
-            return false;
+            //return false;
         } //End fuel capacity check
         if (currentFuel+amount < 0) { //Check if we have that much fuel to lose
             throw 'Cannot subtract fuel from '+this.id+', insufficient fuel';
-            return false;
+            //return false;
         } //End fuel availability check
         this.fuel = currentFuel + amount;
         this.updateDeltaV();
@@ -78,7 +78,7 @@ KEPLER.Spacecraft = function(id,mass,fuelMax,exhaustV,orbit) {
     this.subDeltaV = function ( amount ) {
         if (this.deltaV.value-amount < 0) { //Check if we have that much deltaV to lose
             throw 'Cannot subtract deltaV from '+this.id+', insufficient deltaV';
-            return false;
+            //return false;
         } //End deltaV availability check
 
         // MATH:
