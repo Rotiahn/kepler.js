@@ -113,7 +113,7 @@ EXAMPLE.Deimos = new KEPLER.AstroBody(
 
 
 EXAMPLE.voyager1 = new KEPLER.Spacecraft(
-     'Deimos'                               //id
+     'voyager1'                             //id
     ,722                                    //mass
     ,10                                     //fuelMax
     ,3369                                   //exhaustV

@@ -206,8 +206,11 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
         else if (ecc < 1) {     // per guidance from Markus
             var M = mAnomaly;
             var E = M;
+            var i = 0
             while (Math.abs(E - (ecc * Math.sin(E)) - M) > 0.0000000001) {
                 E-= (E - ecc * Math.sin(E) - M) / (1 - ecc * Math.cos(E));
+                i++;
+                if (i>=1000) {throw 'took too long to determine E for '+this.id;};
             }
             return E;
         } // eliptical
@@ -223,8 +226,11 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
             //M = ecc * sinh(F) - F
             //0 = ecc * sinh(F) - F - M
             var F = M;
+            var i = 0
             while (Math.abs((ecc * Math.sinh(F)) - F - M) > 0.0000000001) {
-                F-= (ecc * Math.sinh(F) - M) / (ecc * Math.cosh(F) - 1);
+                F-= (ecc * Math.sinh(F) - F - M) / (ecc * Math.cosh(F) - 1);
+                i++;
+                if (i>=1000) {throw 'took too long to determine E for '+this.id;};
             }
             return F;
             ;
