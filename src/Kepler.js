@@ -3,7 +3,7 @@
  * @namespace kepler
  */
 
-var KEPLER = { VERSION: '0.0.4' };
+var KEPLER = { VERSION: '0.0.6' };
 
 
 //CONSTANTS
@@ -80,7 +80,7 @@ KEPLER.DEGREES_PER_DAY = KEPLER.DEGREE / KEPLER.DAY;
 KEPLER.UNIT_mass = 'Kilograms';
 
 /**@constant {number}  */
-KEPLER.tonne = KEPLER.ton = 1000;
+KEPLER.TONNE = KEPLER.TON = 1000;
 
 /**@constant {number}  */
 KEPLER.EARTH_MASS = 5.974e24;

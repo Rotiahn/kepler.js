@@ -7,7 +7,7 @@
  * @namespace kepler
  */
 
-var KEPLER = { VERSION: '0.0.4' };
+var KEPLER = { VERSION: '0.0.6' };
 
 
 //CONSTANTS
@@ -84,7 +84,7 @@ KEPLER.DEGREES_PER_DAY = KEPLER.DEGREE / KEPLER.DAY;
 KEPLER.UNIT_mass = 'Kilograms';
 
 /**@constant {number}  */
-KEPLER.tonne = KEPLER.ton = 1000;
+KEPLER.TONNE = KEPLER.TON = 1000;
 
 /**@constant {number}  */
 KEPLER.EARTH_MASS = 5.974e24;
@@ -1873,24 +1873,58 @@ KEPLER.Matrix4 = THREE.Matrix4;
  * @author Rotiahn / https://github.com/Rotiahn/
  * @class
  * @classdesc AstroBody is the root class for any object (such as Planets, Moons, Spacecraft)
+ * @param {string} id - the ID of the AstroBody being created.
  * @param {number} mass - the mass (in kg) of the AstroBody being created.
+ * @param {KEPLER.Orbit} orbit - the Orbit object for this AstroBody.
+ * @example
+ * //Gives an AstroBody for the Sun at the center of the solar System
+ * EXAMPLE.Sol = new KEPLER.AstroBody(KEPLER.SOL_MASS,new KEPLER.NULL_ORBIT());
+ * @example
+ * //Gives an AstroBody for the Earth orbiting the sun
+ * EXAMPLE.Earth = new KEPLER.AstroBody(
+ *     5.97219e24                               //mass
+ *     ,new KEPLER.Orbit(
+ *         EXAMPLE.Sol                         //Primary
+ *         ,1.000371833989169e+00*KEPLER.AU    //a
+ *         ,1.704239716781501e-02              //ecc
+ *         ,3.581891404220149e+02*KEPLER.DEGREE//mAnomaly
+ *         ,2.669113820737183e-04*KEPLER.DEGREE//rotI
+ *         ,2.977668064579176e+02*KEPLER.DEGREE//rotW
+ *         ,1.639752443600624e+02*KEPLER.DEGREE//rotOmeg
+ *     )
+ * );
  * @module kepler
  */
-KEPLER.AstroBody = function(mass,orbit) {
+KEPLER.AstroBody = function(id,mass,orbit) {
 
     //Part I: Declare Members
+    /** ID of this AstroBody
+    * @member {string}
+    * @public
+    */
+    this.id = id;
     /** Mass of this AstroBody
     * @member {number}
     * @public
     */
     this.mass = mass;       // (kg)
-
     /** AstroBody's orbit (kept private to avoid direct interaction)
     * @member {KEPLER.Orbit}
     * @private
     */
     var orbit = orbit;
-
+    /** List (Array) of KEPLER.AstroBody listing those AstroBodys which have this AstroBody as a primary
+    * @member {array}
+    * @private
+    */
+    this.satellites = [];
+    /** Primary of AstroBody (The AstroBody around which this AstroBody is orbiting
+    * @member {KEPLER.AstroBody}
+    * @public
+    */
+    this.primary = orbit.primary;
+    //Add this Astrobody as a satellite to its primary
+    this.primary.addSatellite(this);
 
     //Part II: Connect Orbit Functions
 
@@ -1914,6 +1948,28 @@ KEPLER.AstroBody = function(mass,orbit) {
     this.subTime = function() {
         return orbit.subTime()
     };
+
+    //Part III: AstroBody Functions
+    /** Add satellite
+    * @function addSatellite
+    * @param {KEPLER.AstroBody} satellite
+    * @public
+    */
+    this.addSatellite = function(satellite) {
+        this.satellites.push(satellite);
+    }
+    /** Remove satellite
+    * Only satellites which are pointers to exactly the same object will be removed.
+    * Satellites which are different, but identical values will not be removed
+    * @function removeSatellite
+    * @param {KEPLER.AstroBody} satellite
+    * @public
+    */
+    this.removeSatellite = function(satellite) {
+        this.satellites = this.satellites.filter(function(x) {
+            return x !== satellite;
+        });
+    }
 
 
 }//end of Astro_Body() definition
@@ -2005,7 +2061,7 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
         if (ecc < 1) {
             return (1 - ecc) * a;
         } // circular or eliptical
-        else if (ecc = 1) {
+        else if (ecc === 1) {
             //See Note 1.
             return a;
         } // parabolic
@@ -2108,10 +2164,10 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
         if (ecc < 1) {
             return Math.pow( ( (a*a*a)/(mu) ) , 0.5) * mAnomaly;
         } // circular or eliptical
-        else if (ecc = 1) {
+        else if (ecc === 1) {
             return Math.pow( ( (2*a*a*a)/(mu) ) , 0.5) * mAnomaly;
         } // parabolic
-        else if (ecc >= 1) {
+        else if (ecc > 1) {
             return Math.pow( ( ((-a)*(-a)*(-a))/(mu) ) , 0.5) * mAnomaly;
         } // hyperbolic
 
@@ -2128,25 +2184,31 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
         else if (ecc < 1) {     // per guidance from Markus
             var M = mAnomaly;
             var E = M;
+            var i = 0
             while (Math.abs(E - (ecc * Math.sin(E)) - M) > 0.0000000001) {
                 E-= (E - ecc * Math.sin(E) - M) / (1 - ecc * Math.cos(E));
+                i++;
+                if (i>=1000) {throw 'took too long to determine E for '+this.id;};
             }
             return E;
         } // eliptical
-        else if (ecc = 1) {
+        else if (ecc === 1) {
             //D = tan(tAnomaly/2);
             tAnomaly = calculateTAnomaly();
             var D = Math.tan(tAnomaly/2);
             return D;
             ;
         } // parabolic
-        else if (ecc >= 1) {
+        else if (ecc > 1) {
             var M = mAnomaly;
             //M = ecc * sinh(F) - F
             //0 = ecc * sinh(F) - F - M
             var F = M;
+            var i = 0
             while (Math.abs((ecc * Math.sinh(F)) - F - M) > 0.0000000001) {
-                F-= (ecc * Math.sinh(F) - M) / (ecc * Math.cosh(F) - 1);
+                F-= (ecc * Math.sinh(F) - F - M) / (ecc * Math.cosh(F) - 1);
+                i++;
+                if (i>=1000) {throw 'took too long to determine E for '+this.id;};
             }
             return F;
             ;
@@ -2373,11 +2435,154 @@ KEPLER.NULL_ORBIT = function() {
          return velocity;
     }
 
+    /** Add satellite (NULL_ORBIT, do nothing)
+    * @function addSatellite
+    * @param {KEPLER.AstroBody} satellite
+    * @public
+    */
+    this.primary.addSatellite = function(satellite) {
+
+    }
+    /** Remove satellite (NULL_ORBIT, do nothing)
+    * @function removeSatellite
+    * @param {KEPLER.AstroBody} satellite
+    * @public
+    */
+    this.primary.removeSatellite = function(satellite) {
+
+    }
+
 
     this.updateAllElements();
 
 }
 KEPLER.NULL_ORBIT.prototype = Object.create(KEPLER.Orbit.prototype);
+
+//File: /Volumes/Macintosh HD 2/Users/shariton/Documents/kepler.js/src/Spacecraft.js
+
+/** A function for creating Spacecraft objects
+ * A Spacecraft is an AstroBody which can use fuel to change its orbit.
+ * @author Rotiahn / https://github.com/Rotiahn/
+ * @class
+ * @classdesc AstroBody is the root class for any object (such as Planets, Moons, Spacecraft)
+ * @param {string} id - the ID of the Spacecraft being created.
+ * @param {number} mass - the DRY mass (in kg) of the Spacecraft being created.
+ * @param {number} fuelMax - the mass (in kg) of the maximum fuel that can be carried by the Spacecraft
+ * @param {number} exhaustV - Engine ISP (m/s) = the effective exhaust velocity of the Spacecraft engine = Thrust (Newtons) / fuelRate (kg/s)
+ * @param {KEPLER.Orbit} orbit - the Orbit object for this AstroBody.
+ * @module kepler
+ */
+KEPLER.Spacecraft = function(id,mass,fuelMax,exhaustV,orbit) {
+    //Part I: Build AstroBody
+    KEPLER.AstroBody.call(this,id,mass,orbit);
+
+    //Part II: Spacecraft Specifics
+
+    /** Maximum amount of fuel (kg) Spacecraft can hold
+    * @member {number}
+    * @private
+    */
+    var fuelMax = fuelMax;
+    /** Current amount of fuel (kg) Spacecraft is holding
+    * @member {number}
+    * @public
+    */
+    this.fuel = 0;  //Spacecraft start will empty fuelTanks
+    /** Current amount of deltaV (m/s) Spacecraft is capable of achieving based on mass & fuel
+    * @member {number}
+    * @public
+    */
+    this.deltaV = 0;  //Spacecraft start will empty fuelTanks
+    /** Efficiency of Engine based on Effective exhaust velocity of Spacecraft's engine
+    * @member {number}
+    * @private
+    */
+    var exhaustV = exhaustV;
+
+    //Part III: Add Spacecraft functions
+
+    /** Add Fuel to fuel tank
+    * @function addFuel
+    * @param {number} amount - Amount of fuel (kg) to add
+    * @returns {boolean} - true if successful, false if not
+    * @public
+    */
+    this.addFuel = function( amount ) {
+        var currentFuel = this.fuel.value;
+        if (currentFuel+amount > fuelMax) { //Check if we can hold this much fuel
+            throw 'Cannot add more fuel to '+this.id+', fuel Capacity Exceeded. Fuel Tank Size: '+fuelMax+' kg';
+            //return false;
+        } //End fuel capacity check
+        if (currentFuel+amount < 0) { //Check if we have that much fuel to lose
+            throw 'Cannot subtract fuel from '+this.id+', insufficient fuel';
+            //return false;
+        } //End fuel availability check
+        this.fuel = currentFuel + amount;
+        this.updateDeltaV();
+        return true;
+    }
+    /** Subtract fuel from fuel tank
+    * @function subFuel
+    * @param {number} amount - Amount of fuel (kg) to subtract
+    * @returns {boolean} - true if successful, false if not
+    * @public
+    */
+    this.subFuel = function( amount ) {
+        this.addFuel( -amount );
+        return true;
+    }
+    /** Subtract delta V from Spacecraft (i.e. subtract fuel proportional to cause a drop in available deltaV)
+    * @function subDeltaV
+    * @param {number} amount - Amount of deltaV (m/s) to subtract
+    * @returns {boolean} - true if successful, false if not
+    * @public
+    */
+    this.subDeltaV = function ( amount ) {
+        if (this.deltaV.value-amount < 0) { //Check if we have that much deltaV to lose
+            throw 'Cannot subtract deltaV from '+this.id+', insufficient deltaV';
+            //return false;
+        } //End deltaV availability check
+
+        // MATH:
+        // deltaV = exhaustVEff * Math.log( mass_0 / mass_1 )
+        // deltaV / exhaustVEff = Math.log( mass_0 / (mass_0 - mass_delta ) )
+        // e ^ (deltaV / exhaustVEff) = mass_0 / (mass_0 - mass_delta )
+        // 1 / (e ^ (deltaV / exhaustVEff) ) = (mass_0 - mass_delta) / mass_0
+        // mass_0 / (e ^ (deltaV / exhaustVEff) ) = mass_0 - mass_delta
+        // mass_delta = mass_0 - mass_0 / (e ^ (deltaV / exhaustVEff) )
+        // mass_delta = mass_0 * (1 -  (1 / (e ^ (deltaV / exhaustVEff) ) ) )
+
+        var current_deltaV = this.deltaV; // m/s
+        var exhaustVEff = this.exhaustVEff; // m/s
+        var massDry = this.mass; // kg
+        //var massCargo = this.cargo; // kg
+        var massFuel = this.fuel; // kg
+        var massTotal = massDry + massFuel; // kg
+        var massDelta = massTotal * (1 - (1 / (Math.exp( amount / (exhaustVEff) ) ) ) );
+
+        this.subFuel(massDelta);
+        return true;
+    }
+    /** Update the delta V budget based on the current fuel and Spacecraft mass
+    * @function updateDeltaV
+    * @returns {boolean} - true if successful, false if not
+    * @public
+    */
+    this.updateDeltaV = function() {
+        var massDry = this.mass;
+        //var massCargo = this.cargo;
+        var massFuel = this.fuel;
+        var massTotal = massDry + massFuel;
+
+        var exhaustVEff = this.exhaustVEff; // m/s
+
+        var deltaV = exhaustVEff * Math.log( massTotal / (massDry ) ); // m/s
+
+        this.deltaV = deltaV ;  // m/s
+        return true;
+    }
+}
+KEPLER.Spacecraft.prototype = Object.create(KEPLER.AstroBody.prototype);
 
 //File: /Volumes/Macintosh HD 2/Users/shariton/Documents/kepler.js/src/examples.js
 
@@ -2391,12 +2596,14 @@ KEPLER.NULL_ORBIT.prototype = Object.create(KEPLER.Orbit.prototype);
 var EXAMPLE = {};
 
 EXAMPLE.Sol = new KEPLER.AstroBody(
-    KEPLER.SOL_MASS
+     'Sol'
+    ,KEPLER.SOL_MASS
     ,new KEPLER.NULL_ORBIT()
 );
 
 EXAMPLE.Mercury = new KEPLER.AstroBody(
-    3.302e23                                //mass
+     'Mercury'
+    ,3.302e23                                //mass
     ,new KEPLER.Orbit(
         EXAMPLE.Sol                         //Primary
         ,3.870982252717257e-01*KEPLER.AU    //a
@@ -2409,7 +2616,8 @@ EXAMPLE.Mercury = new KEPLER.AstroBody(
 );
 
 EXAMPLE.Venus = new KEPLER.AstroBody(
-    4.8685e24                               //mass
+     'Venus'
+    ,4.8685e24                               //mass
     ,new KEPLER.Orbit(
         EXAMPLE.Sol                         //Primary
         ,7.233268496749391e-01*KEPLER.AU    //a
@@ -2422,7 +2630,8 @@ EXAMPLE.Venus = new KEPLER.AstroBody(
 );
 
 EXAMPLE.Earth = new KEPLER.AstroBody(
-    5.97219e24                               //mass
+     'Earth'
+    ,5.97219e24                               //mass
     ,new KEPLER.Orbit(
         EXAMPLE.Sol                         //Primary
         ,1.000371833989169e+00*KEPLER.AU    //a
@@ -2434,8 +2643,9 @@ EXAMPLE.Earth = new KEPLER.AstroBody(
     )
 );
 
-EXAMPLE.Moon = new KEPLER.AstroBody(
-    734.9e20
+EXAMPLE.Luna = new KEPLER.AstroBody(
+     'Luna'
+    ,734.9e20                                //mass
     ,new KEPLER.Orbit(
         EXAMPLE.Earth                       //Primary
         ,3.812186882902056e5*KEPLER.KM      //a
@@ -2448,7 +2658,8 @@ EXAMPLE.Moon = new KEPLER.AstroBody(
 );
 
 EXAMPLE.Mars = new KEPLER.AstroBody(
-    6.4185e23
+     'Mars'
+    ,6.4185e23                               //mass
     ,new KEPLER.Orbit(
         EXAMPLE.Sol                         //Primary
         ,1.523678184302188e+00*KEPLER.AU    //a
@@ -2461,10 +2672,11 @@ EXAMPLE.Mars = new KEPLER.AstroBody(
 );
 
 EXAMPLE.Phobos = new KEPLER.AstroBody(
-    1.08e20
+     'Phobos'
+    ,1.08e20                                 //mass
     ,new KEPLER.Orbit(
         EXAMPLE.Mars                        //Primary
-        ,9.378286882214712e+03*KEPLER.KM      //a
+        ,9.378286882214712e+03*KEPLER.KM    //a
         ,1.541577713745092e-02              //ecc
         ,3.458103658779790e+02*KEPLER.DEGREE//mAnomaly
         ,2.605134469392531e+01*KEPLER.DEGREE//rotI
@@ -2474,10 +2686,11 @@ EXAMPLE.Phobos = new KEPLER.AstroBody(
 );
 
 EXAMPLE.Deimos = new KEPLER.AstroBody(
-    1.80e20
+     'Deimos'
+    ,1.80e20
     ,new KEPLER.Orbit(
         EXAMPLE.Mars                        //Primary
-        ,2.345888830758717e+04*KEPLER.KM      //a
+        ,2.345888830758717e+04*KEPLER.KM    //a
         ,2.419395670375644e-04              //ecc
         ,2.441640161731743e+02*KEPLER.DEGREE//mAnomaly
         ,2.757017394063173e+01*KEPLER.DEGREE//rotI
@@ -2486,3 +2699,19 @@ EXAMPLE.Deimos = new KEPLER.AstroBody(
     )
 );
 
+
+EXAMPLE.voyager1 = new KEPLER.Spacecraft(
+     'voyager1'                             //id
+    ,722                                    //mass
+    ,10                                     //fuelMax
+    ,3369                                   //exhaustV
+    ,new KEPLER.Orbit(
+        EXAMPLE.Sol                        //Primary
+        ,-3.220924861390099E+00*KEPLER.AU    //a
+        ,3.707585664603564E+00              //ecc
+        ,1.248081698810124E+03*KEPLER.DEGREE//mAnomaly
+        ,3.581757543323521E+01*KEPLER.DEGREE//rotI
+        ,3.379563327150580E+02*KEPLER.DEGREE//rotW
+        ,1.792513338910511E+02*KEPLER.DEGREE//rotOmeg
+    )
+);

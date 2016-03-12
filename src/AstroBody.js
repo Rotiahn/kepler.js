@@ -2,6 +2,7 @@
  * @author Rotiahn / https://github.com/Rotiahn/
  * @class
  * @classdesc AstroBody is the root class for any object (such as Planets, Moons, Spacecraft)
+ * @param {string} id - the ID of the AstroBody being created.
  * @param {number} mass - the mass (in kg) of the AstroBody being created.
  * @param {KEPLER.Orbit} orbit - the Orbit object for this AstroBody.
  * @example
