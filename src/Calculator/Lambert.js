@@ -2,6 +2,8 @@
  * @author Rotiahn / https://github.com/Rotiahn/
  * @param {KEPLER.Orbit} orbit1 - The initial orbit
  * @param {KEPLER.Orbit} orbit2 - The destination orbit
+ * @param {KEPLER.Orbit} orbit2 - The destination orbit
+ * @param {number} duration - the amount of time (s) the transfer orbit should take
  * @returns {object} thrustVectors - an object containing the two thrust vectors (departure and arrival) necessary to transfer from Orbit1 to Orbit2
  * @see Rodney L. Anderson, “Solution of the Lambert Problem using Universal Variables”
  * @see Bate, Roger R., D.D. Mueller, and J.E. White, Fundamentals of Astrodynamics, New Dover Publications, New York, 1971
@@ -13,6 +15,7 @@ KEPLER.Lambert = function(orbit1,orbit2,duration) {
     //check that orbit1 and orbit2 have same primary
     if (orbit1.primary !== orbit2.primary) {throw 'Cannot use lambert solver to find path from Orbiting '+orbit1.primary+' to orbiting '+orbit2.primary;};
 
+    //Create Local instances of orbits at departure and arrival
     var object1 = orbit1.clone();
     var object2 = orbit2.clone();
     object2.addTime(duration);
@@ -83,8 +86,8 @@ KEPLER.Lambert = function(orbit1,orbit2,duration) {
 			S = ( Math.sqrt(z) - Math.sin(Math.sqrt(z)) ) / ( Math.pow(z,3/2) );
 		} else if (z < -0.000001) {
 			//Transfer orbit is looking hyperbolic
-			C = ( 1.0 - cosh(Math.sqrt(-z)) ) / ( z );
-			S = ( sinh(Math.sqrt(-z)) - Math.sqrt(-z) ) / ( Math.pow(-z,3/2) );
+			C = ( 1.0 - Math.cosh(Math.sqrt(-z)) ) / ( z );
+			S = ( Math.sinh(Math.sqrt(-z)) - Math.sqrt(-z) ) / ( Math.pow(-z,3/2) );
 		} else {
 			C = 0.5;
 			S = 1/6;
@@ -93,6 +96,7 @@ KEPLER.Lambert = function(orbit1,orbit2,duration) {
 		//console.log(Math.abs( t-t_delta));
 		if (i>150) {
 		    //console.log("Lambert solver exceeded 150 iterations; Breaking",time1,time2);
+		    throw 'Lambert solver exceeded 150 iterations; Breaking '+duration
 		    return -1;
 		};
 	};
