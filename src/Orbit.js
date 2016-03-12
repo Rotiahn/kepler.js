@@ -382,7 +382,35 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
 
          return velocityFinal;
     }
+    /** Create a new (clone) Orbit with the same parameters at this one, and return it.
+    * @function clone
+    * @returns {KEPLER.Orbit} - Returns a new KEPLER.Orbit with the same parameters as this one.
+    * @example
+    * //Returns orbitB is a copy of orbitB, but different objects
+    * orbitA = new KEPLER.Orbit({mass:KEPLER.SOL},100e3,0,0,0,0);
+    * orbitB = orbitA.clone();
+    * orbitA === orbitB; //false
+    * //All True:
+    * for (key in Object.keys(orbitA.getElements())) {console.log(key,':',(orbitA.getElements()[key]===orbitB.getElements()[key]));};
+    * @public
+    */
+    this.clone = function() {
+        //Part I: gather Orbital Elements
+        this.updateAllElements();
+        var elements = this.getElements();
 
+        //Part II: Create clone
+        var clone = new KEPLER.Orbit(
+             this.primary
+            ,elements.a
+            ,elements.ecc
+            ,elements.mAnomaly
+            ,elements.rotI
+            ,elements.rotW
+            ,elements.rotOmeg
+        );
+        return clone;
+    }
 
     //Part III: Update Functions
 
