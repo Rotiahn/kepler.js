@@ -275,7 +275,7 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
     * @see {@link http://microsat.sm.bmstu.ru/e-library/Ballistics/kepler.pdf}
     * @private
     */
-    var keplerize = function(position,velocity) {
+    var keplerize = function(mu,position,velocity) {
         var r = position.clone(); // m
         var v = velocity.clone(); // m/s
 
@@ -293,14 +293,14 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
 
         var axis_omeg = new THREE.Vector3(0,0,1); //radians
         var matrix_omeg = new THREE.Matrix4().makeRotationAxis( axis_omeg, rot_omeg);
-        position2.applyMatrix4(matrix_omeg);
+        r2.applyMatrix4(matrix_omeg);
 
         var axis_i = new THREE.Vector3(1,0,0);
         var matrix_i = new THREE.Matrix4().makeRotationAxis( axis_i, rot_i);
-        position2.applyMatrix4(matrix_i);
+        r2.applyMatrix4(matrix_i);
 
         //determine argument of latitude u, where tan(u) = tan(w+v) = p2/p1
-      	var arg_lat = Math.atan(position2.y/position2.x);  //radians
+      	var arg_lat = Math.atan(r2.y/r2.x);  //radians
 
         // a = (GM * r) / (2GM - r*velocity_scalar^2)
         // e = SQRT(1 - (h^2 / (GM*a))
@@ -332,8 +332,14 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
         var E = Math.asin(sin_E)  //radians
         var M = E - ecc*sin_E;  //radians
 
-        this.updateAllElements();
-
+        var elements = {	 'a'       :a
+                            ,'ecc'     :ecc
+                            ,'mAnomaly':mAnomaly
+                            ,'rotI'    :rotI
+                            ,'rotW'    :rotW
+                            ,'rotOmeg' :rotOmeg
+                        };
+        return elements;
     }
 
     //Part III: Get Functions
