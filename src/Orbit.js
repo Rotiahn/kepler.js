@@ -510,6 +510,36 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
     this.subTime = function(deltaTime) {
         return this.addTime(-deltaTime);
     }
+    /** Add Cartesian velocity to this orbit to cause a change in orbital functions
+    * @function addVelocity
+    * @param {KEPLER.Vector3} deltaV - Vector to be added to the current velocity and adjust orbital elements
+    * @returns {KEPLER.Orbit} - Returns a KEPLER.Vector3 which defines the position in the orbit (INCORPORATES PRIMARY)
+    * @see {@link http://microsat.sm.bmstu.ru/e-library/Ballistics/kepler.pdf}
+    * @public
+    */
+    this.addVelocity = function(deltaV) {
+
+        //Part I: Get Cartesian elements
+        var position = this.getPosition();
+        var velocity = this.getVelocity();
+
+        //Part II: Add deltaV to velocity;
+        velocity.add(deltaV);
+
+        //Part III: Update orbital elements
+        var result = keplerize(mu,position,velocity);
+
+        a           = result.a;
+        ecc         = result.ecc;
+        mAnomaly    = result.mAnomaly;
+        rotI        = result.rotI;
+        rotW        = result.rotW;
+        rotOmeg     = result.rotOmeg;
+
+        this.updateAllElements();
+
+        return result;
+    }
 
 } //end of KEPLER.Orbit()
 
