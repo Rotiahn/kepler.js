@@ -28,6 +28,13 @@ KEPLER.TransferSolver.minDeltaV = function (orbit1, orbit2) {
                             ,object2.T  //or the full orbit of target object
                             );
 
+//Need a mechanism for optimizing non-coplanar comparisons.
+// Idea1 - Break into 10 chunks, find best, then 10 chunks, etc.
+// Idea2 - Binary solver
+// Idea3 - Modified Lambert Solver?
+
+//There will be local minima (based on behavior of smaller orbit), but best minima will be best local minimum for particular position of larger orbit.
+
 
 	var joptions=[];
 	for (var j=departTimeMin; j<=departTimeMax; j++) {
