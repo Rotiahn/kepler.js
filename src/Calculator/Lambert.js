@@ -97,7 +97,7 @@ KEPLER.Lambert = function(orbit1,orbit2,duration) {
 		if (i>150) {
 		    //console.log("Lambert solver exceeded 150 iterations; Breaking",time1,time2);
 		    throw 'Lambert solver exceeded 150 iterations; Breaking '+duration
-		    return -1;
+		    //return -1;
 		};
 	};
 	var f =  1 - ( y / r_initial_length );  //km/km = no unit

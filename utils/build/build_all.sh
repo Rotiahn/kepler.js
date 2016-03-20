@@ -18,6 +18,10 @@ FILELIST=(
     "$SRCDIR/AstroBody.js"                      #Astrobody
     "$SRCDIR/Orbit.js"                          #Orbit
     "$SRCDIR/Spacecraft.js"                     #Spacecraft
+    "$SRCDIR/Transfer.js"                       #Transfer
+
+    "$SRCDIR/Calculator/Lambert.js"             #Lambert Solver
+    "$SRCDIR/Calculator/TransferSolver.js"      #Various Transfer Solvers
 
     "$SRCDIR/examples.js"                       
 )
