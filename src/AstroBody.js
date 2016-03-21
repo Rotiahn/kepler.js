@@ -39,9 +39,15 @@ KEPLER.AstroBody = function(id,mass,orbit) {
     this.mass = mass;       // (kg)
     /** AstroBody's orbit (kept private to avoid direct interaction)
     * @member {KEPLER.Orbit}
-    * @private
+    * @protected - orbit is accessible, and orbit functions are readable, however cannot directly change orbit to new value;
     */
     var orbit = orbit;
+    Object.defineProperties(this, {
+        orbit: {
+             enumerable: true
+            ,value: orbit
+        }
+    });
     /** List (Array) of KEPLER.AstroBody listing those AstroBodys which have this AstroBody as a primary
     * @member {array}
     * @private
@@ -77,6 +83,44 @@ KEPLER.AstroBody = function(id,mass,orbit) {
     this.subTime = function() {
         return orbit.subTime()
     };
+    /** Create a new (clone) AstroBody with the same parameters at this one, and return it.
+    * @function clone
+    * @returns {KEPLER.AstroBody} - Returns a new KEPLER.AstroBody with the same parameters as this one.  The orbits will also be separate objects.
+    * @example
+    * //Returns AstroBodyB is a copy of AstroBodyA, but different objects
+    * AstroBodyA = new KEPLER.AstroBody('1',50*KEPLER.TONNE,new KEPLER.Orbit({mass:KEPLER.SOL},100e3,0,0,0,0));
+    * AstroBodyB = AstroBodyA.clone();
+    * AstroBodyA === AstroBodyB; //false
+    * //All True:
+    * for (key in Object.keys(orbitA.getElements())) {console.log(key,':',(orbitA.getElements()[key]===orbitB.getElements()[key]));};
+    * @public
+    */
+    this.clone = function() {
+        //Part I: gather Orbital Elements
+        //this.updateAllElements();
+        var elements = this.getElements();
+        var id = this.id;
+        var mass = this.mass;
+        var satellites = this.satellites;
+
+        //Part II: Create clone of Orbit
+        var cloneOrbit = new KEPLER.Orbit(
+             this.primary
+            ,elements.a
+            ,elements.ecc
+            ,elements.mAnomaly
+            ,elements.rotI
+            ,elements.rotW
+            ,elements.rotOmeg
+        );
+
+        //Part III: Clone Astrobody
+        var cloneAstroBody = new KEPLER.AstroBody(id,mass,cloneOrbit);
+        satellites.forEach(function(satellite) {
+            cloneAstroBody.addSatellite(satellite.clone());
+        });
+        return cloneAstroBody;
+    }
 
     //Part III: AstroBody Functions
     /** Add satellite

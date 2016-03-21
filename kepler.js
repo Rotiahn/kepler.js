@@ -1910,9 +1910,15 @@ KEPLER.AstroBody = function(id,mass,orbit) {
     this.mass = mass;       // (kg)
     /** AstroBody's orbit (kept private to avoid direct interaction)
     * @member {KEPLER.Orbit}
-    * @private
+    * @protected - orbit is accessible, and orbit functions are readable, however cannot directly change orbit to new value;
     */
     var orbit = orbit;
+    Object.defineProperties(this, {
+        orbit: {
+             enumerable: true
+            ,value: orbit
+        }
+    });
     /** List (Array) of KEPLER.AstroBody listing those AstroBodys which have this AstroBody as a primary
     * @member {array}
     * @private
@@ -1948,6 +1954,44 @@ KEPLER.AstroBody = function(id,mass,orbit) {
     this.subTime = function() {
         return orbit.subTime()
     };
+    /** Create a new (clone) AstroBody with the same parameters at this one, and return it.
+    * @function clone
+    * @returns {KEPLER.AstroBody} - Returns a new KEPLER.AstroBody with the same parameters as this one.  The orbits will also be separate objects.
+    * @example
+    * //Returns AstroBodyB is a copy of AstroBodyA, but different objects
+    * AstroBodyA = new KEPLER.AstroBody('1',50*KEPLER.TONNE,new KEPLER.Orbit({mass:KEPLER.SOL},100e3,0,0,0,0));
+    * AstroBodyB = AstroBodyA.clone();
+    * AstroBodyA === AstroBodyB; //false
+    * //All True:
+    * for (key in Object.keys(orbitA.getElements())) {console.log(key,':',(orbitA.getElements()[key]===orbitB.getElements()[key]));};
+    * @public
+    */
+    this.clone = function() {
+        //Part I: gather Orbital Elements
+        //this.updateAllElements();
+        var elements = this.getElements();
+        var id = this.id;
+        var mass = this.mass;
+        var satellites = this.satellites;
+
+        //Part II: Create clone of Orbit
+        var cloneOrbit = new KEPLER.Orbit(
+             this.primary
+            ,elements.a
+            ,elements.ecc
+            ,elements.mAnomaly
+            ,elements.rotI
+            ,elements.rotW
+            ,elements.rotOmeg
+        );
+
+        //Part III: Clone Astrobody
+        var cloneAstroBody = new KEPLER.AstroBody(id,mass,cloneOrbit);
+        satellites.forEach(function(satellite) {
+            cloneAstroBody.addSatellite(satellite.clone());
+        });
+        return cloneAstroBody;
+    }
 
     //Part III: AstroBody Functions
     /** Add satellite
@@ -2246,7 +2290,79 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
         this.updateElement.periT();
         this.updateElement.E();
     };
+    /** update Orbital Elements based on Cartesian Position and Velocity
+    * @function keplerize
+    * @param {KEPLER.Vector3} position - Vector of current position
+    * @param {KEPLER.Vector3} velocity - Vector of current velocity
+    * @see {@link http://microsat.sm.bmstu.ru/e-library/Ballistics/kepler.pdf}
+    * @private
+    */
+    var keplerize = function(mu,position,velocity) {
+        var r = position.clone(); // m
+        var v = velocity.clone(); // m/s
 
+    	//This Function is meant to be used for determining orbits from points and velocities.
+    	//It is primarily used for applying velocity changes and calculating resulting new orbital elements
+        var ang_momentum = new KEPLER.Vector3(0,0,0);
+	    ang_momentum.crossVectors(position,velocity)  // m^2/s
+
+        var rot_omeg 	= Math.atan( ang_momentum.x / (-ang_momentum.y) ); //radians
+        var rot_i 		= Math.atan( Math.sqrt(ang_momentum.x*ang_momentum.x + ang_momentum.y*ang_momentum.y) / ang_momentum.z ) //radians
+
+    	//rotate position into orbital frame:
+        var r2 = new THREE.Vector3(0,0,0);
+	    r2.copy(r); // m
+
+        var axis_omeg = new THREE.Vector3(0,0,1); //radians
+        var matrix_omeg = new THREE.Matrix4().makeRotationAxis( axis_omeg, rot_omeg);
+        r2.applyMatrix4(matrix_omeg);
+
+        var axis_i = new THREE.Vector3(1,0,0);
+        var matrix_i = new THREE.Matrix4().makeRotationAxis( axis_i, rot_i);
+        r2.applyMatrix4(matrix_i);
+
+        //determine argument of latitude u, where tan(u) = tan(w+v) = p2/p1
+      	var arg_lat = Math.atan(r2.y/r2.x);  //radians
+
+        // a = (GM * r) / (2GM - r*velocity_scalar^2)
+        // e = SQRT(1 - (h^2 / (GM*a))
+
+        var mu = mu;  //  m^3/s^2
+        var r_scalar = r.length();  // m
+        var v_scalar = v.length();  // m
+        var h_scalar = ang_momentum.length(); // m^2/s
+        var a = (mu * r_scalar) / (2*mu - r_scalar*(v_scalar*v_scalar));  //  m^4/s^2  / (m^3/s^2 - m*m/s*m/s) = m^4/s^2  / m^3/s^2 = m
+        var ecc = Math.sqrt(1 - (h_scalar*h_scalar / (mu*a)));  //  m^2/s * m^2/s  / (m^3/s^2 * m) = m^4/s^2 / m^4/s^2 = no units
+
+        // radial velocity = position DOT velocity / position_scalar
+        var rad_v = position.dot(velocity) / r_scalar;  //  m*m/s / m = m/s
+
+        // cos(E) = (a-r)/(ae)
+        // sin(E) = (r_scalar*rad_v)/(ecc*sqrt(mu*a))
+        var sin_E = (a-r_scalar)/(a*ecc);
+        var cos_E = (r_scalar*rad_v)/(ecc*Math.sqrt(mu*a));
+
+        // tan(v) = ( sqrt(1-ecc*ecc)*sin_E )/( cos_E - ecc )
+        var v = Math.atan( (Math.sqrt(1-ecc*ecc)*sin_E )/( cos_E - ecc ) );  //radians
+
+        // u = w+v = arg_lat
+        // w = arg_lat-v
+        var rot_w = arg_lat - v; // radians
+
+        // E - ecc*sin(E) = M
+
+        var E = Math.asin(sin_E)  //radians
+        var M = E - ecc*sin_E;  //radians
+
+        var elements = {	 'a'       :a
+                            ,'ecc'     :ecc
+                            ,'mAnomaly':mAnomaly
+                            ,'rotI'    :rotI
+                            ,'rotW'    :rotW
+                            ,'rotOmeg' :rotOmeg
+                        };
+        return elements;
+    }
 
     //Part III: Get Functions
 
@@ -2288,20 +2404,20 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
     var reverseRotations = function (vector) {
         //NOTE: XY plane is the (typical) plane of reference with X+ axis = reference direction and Z+ axis = "north"
 
-        //Part I: Rotate orbital plane around z world-axis by angle -rotOmeg so that ascending node lines up with reference direction
-        var axisOmeg = new KEPLER.Vector3(0,0,1);
-        var matrixOmeg = new KEPLER.Matrix4().makeRotationAxis( axisOmeg, -rotOmeg);
-        vector.applyMatrix4(matrixOmeg);
+        //Part I: Rotate orbit around z world-axis by angle -rotW so that periapsis lines up with reference direction
+        var axisW = new KEPLER.Vector3(0,0,1);
+        var matrixW = new KEPLER.Matrix4().makeRotationAxis( axisW, -rotW);
+        vector.applyMatrix4(matrixW);
 
         //Part II: Rotate orbital plane around x world-axis by angle -rotI so that orbital plane lines up with reference plane
         var axisI = new KEPLER.Vector3(1,0,0);
         var matrixI = new KEPLER.Matrix4().makeRotationAxis( axisI, -rotI);
         vector.applyMatrix4(matrixI);
 
-        //Part III: Rotate orbit around z world-axis by angle -rotW so that periapsis lines up with reference direction
-        var axisW = new KEPLER.Vector3(0,0,1);
-        var matrixW = new KEPLER.Matrix4().makeRotationAxis( axisW, -rotW);
-        vector.applyMatrix4(matrixW);
+        //Part III: Rotate orbital plane around z world-axis by angle -rotOmeg so that ascending node lines up with reference direction
+        var axisOmeg = new KEPLER.Vector3(0,0,1);
+        var matrixOmeg = new KEPLER.Matrix4().makeRotationAxis( axisOmeg, -rotOmeg);
+        vector.applyMatrix4(matrixOmeg);
 
         return vector;
     }
@@ -2360,7 +2476,35 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
 
          return velocityFinal;
     }
+    /** Create a new (clone) Orbit with the same parameters at this one, and return it.
+    * @function clone
+    * @returns {KEPLER.Orbit} - Returns a new KEPLER.Orbit with the same parameters as this one.
+    * @example
+    * //Returns orbitB is a copy of orbitB, but different objects
+    * orbitA = new KEPLER.Orbit({mass:KEPLER.SOL},100e3,0,0,0,0);
+    * orbitB = orbitA.clone();
+    * orbitA === orbitB; //false
+    * //All True:
+    * for (key in Object.keys(orbitA.getElements())) {console.log(key,':',(orbitA.getElements()[key]===orbitB.getElements()[key]));};
+    * @public
+    */
+    this.clone = function() {
+        //Part I: gather Orbital Elements
+        this.updateAllElements();
+        var elements = this.getElements();
 
+        //Part II: Create clone
+        var clone = new KEPLER.Orbit(
+             this.primary
+            ,elements.a
+            ,elements.ecc
+            ,elements.mAnomaly
+            ,elements.rotI
+            ,elements.rotW
+            ,elements.rotOmeg
+        );
+        return clone;
+    }
 
     //Part III: Update Functions
 
@@ -2387,6 +2531,36 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
     */
     this.subTime = function(deltaTime) {
         return this.addTime(-deltaTime);
+    }
+    /** Add Cartesian velocity to this orbit to cause a change in orbital functions
+    * @function addVelocity
+    * @param {KEPLER.Vector3} deltaV - Vector to be added to the current velocity and adjust orbital elements
+    * @returns {KEPLER.Orbit} - Returns a KEPLER.Vector3 which defines the position in the orbit (INCORPORATES PRIMARY)
+    * @see {@link http://microsat.sm.bmstu.ru/e-library/Ballistics/kepler.pdf}
+    * @public
+    */
+    this.addVelocity = function(deltaV) {
+
+        //Part I: Get Cartesian elements
+        var position = this.getPosition();
+        var velocity = this.getVelocity();
+
+        //Part II: Add deltaV to velocity;
+        velocity.add(deltaV);
+
+        //Part III: Update orbital elements
+        var result = keplerize(mu,position,velocity);
+
+        a           = result.a;
+        ecc         = result.ecc;
+        mAnomaly    = result.mAnomaly;
+        rotI        = result.rotI;
+        rotW        = result.rotW;
+        rotOmeg     = result.rotOmeg;
+
+        this.updateAllElements();
+
+        return result;
     }
 
 } //end of KEPLER.Orbit()
@@ -2584,6 +2758,201 @@ KEPLER.Spacecraft = function(id,mass,fuelMax,exhaustV,orbit) {
 }
 KEPLER.Spacecraft.prototype = Object.create(KEPLER.AstroBody.prototype);
 
+//File: /Volumes/Macintosh HD 2/Users/shariton/Documents/kepler.js/src/Transfer.js
+
+/** A function for creating orbital transfer objects
+ * A Transfer contains three Orbits: A start Orbit, a final Orbit and the intermediate transfer Orbit.
+ * It also contains Thrust vector and delta-V requirement components
+ * @author Rotiahn / https://github.com/Rotiahn/
+ * @class
+ * @classdesc Transfers contain all information to describe the orbital transfer from one Orbit to another
+ * @param {KEPLER.Orbit} orbit1 - The initial orbit
+ * @param {KEPLER.Orbit} orbit2 - The destination orbit (mAnomaly should be set to value corresponding to DEPARTURE time)
+ * @param {number} duration - the amount of time (s) the transfer orbit should take
+ * @module kepler
+ */
+
+KEPLER.Transfer = function (orbit1,orbit2,duration) {
+    //check that orbit1 and orbit2 have same primary
+    if (orbit1.primary !== orbit2.primary) {throw 'Cannot create Transfer from Orbiting '+orbit1.primary+' to orbiting '+orbit2.primary;};
+
+	var vectors = KEPLER.Lambert(orbit1,orbit2,duration);  // m/s
+	if (vectors === -1) {
+        //console.log("this orbital transfer is not solveable with these times, breaking",time1,time2);
+        return -1;
+	}
+
+    //Create Local instances of orbits at departure and arrival
+	var object1 = orbit1.clone();
+    var object2 = orbit2.clone();
+    object2.addTime(duration);
+
+	var origin_v = object1.getVelocity();  // m/s
+	var target_v = object2.getVelocity();  // m/s
+
+	var thrust_departure = vectors.departure.clone()
+	thrust_departure.sub(origin_v);  // km/s
+
+	var thrust_arrival = vectors.arrival.clone()
+	thrust_arrival.sub(target_v);  // km/s
+
+	var thrust = {
+					 departure: thrust_departure
+					,arrival: thrust_arrival
+					};
+	var delta_v = thrust.departure.length() + thrust.arrival.length();
+
+	var transfer = {
+					 object1: 	object1
+					,object2: 	object2
+					,object1_v:	origin_v
+					,object2_v:	target_v
+					,duration: 	duration
+					,vector1:	vectors.departure
+					,vector2:	vectors.arrival
+					,thrust1:	thrust.departure
+					,thrust2:	thrust.arrival
+					,delta_v:	delta_v
+					}
+	return transfer;
+
+
+}
+
+//File: /Volumes/Macintosh HD 2/Users/shariton/Documents/kepler.js/src/Calculator/Lambert.js
+
+/** A function for calculating thrust actions necessary for orbital transfers
+ * @author Rotiahn / https://github.com/Rotiahn/
+ * @param {KEPLER.Orbit} orbit1 - The initial orbit
+ * @param {KEPLER.Orbit} orbit2 - The destination orbit
+ * @param {KEPLER.Orbit} orbit2 - The destination orbit
+ * @param {number} duration - the amount of time (s) the transfer orbit should take
+ * @returns {object} thrustVectors - an object containing the two thrust vectors (departure and arrival) necessary to transfer from Orbit1 to Orbit2
+ * @see Rodney L. Anderson, “Solution of the Lambert Problem using Universal Variables”
+ * @see Bate, Roger R., D.D. Mueller, and J.E. White, Fundamentals of Astrodynamics, New Dover Publications, New York, 1971
+ * @module kepler
+ */
+
+KEPLER.Lambert = function(orbit1,orbit2,duration) {
+
+    //check that orbit1 and orbit2 have same primary
+    if (orbit1.primary !== orbit2.primary) {throw 'Cannot use lambert solver to find path from Orbiting '+orbit1.primary+' to orbiting '+orbit2.primary;};
+
+    //Create Local instances of orbits at departure and arrival
+    var object1 = orbit1.clone();
+    var object2 = orbit2.clone();
+    object2.addTime(duration);
+
+	var r_initial = object1.getPosition();
+	var r_final = object2.getPosition();
+
+	var r_initial_length = r_initial.length();
+	var r_final_length = r_final.length();
+
+	var t_delta = duration;
+	var DM = +1;  //Needs to be +1 (posigrade transfer) or -1 (retrograde transfer) based on direction of motion, currently arbitrarily assigning to +1
+
+	//  cos(delta_nu) = ( r_initial dot.product r_final ) / (r_initial_length * r_final_length )
+	//                =         m     *           m       /    m           *     m
+	//      unitless  =                      m^2          /            m^2
+	//  cos(delta_nu) = ( r_initial.dot(r_final) ) / ( r_initial_length * r_final_length )
+	//
+	//  A = DM * sqrt( r_initial_length * r_final_length * ( 1 + cos(delta_nu) ) )
+	//    =      sqrt(      m        *      m      *          unitless     )
+	//  km=      sqrt(                 m^2                                 )
+	//  A = DM * sqrt( r_initial_length * r_final_length * ( 1 + ( r_initial.dot(r_final) ) / ( r_initial_length * r_final_length ) )
+	//  A = DM * sqrt( r_initial_length * r_final_length + ( r_initial.dot(r_final) ) )
+	//
+
+	var A =  DM * Math.sqrt( (r_initial_length * r_final_length) + ( r_initial.dot(r_final) ) )  //m
+	if (A===0) {return 0 }; //not solveable
+
+	//initialize
+	var z = 0.0;
+	var C = 1/2;
+	var S = 1/6;
+	var z_up = 4 * Math.PI * Math.PI;
+	var z_low = -4 * Math.PI;
+	var t = 0;
+	var y = 0;
+	var x = 0;
+	var i = 0;
+
+	var mu = orbit1.getElements().mu;
+
+	//Loop
+	while ( Math.abs( t - t_delta) > 1 ) {
+		y = r_initial_length + r_final_length + (( A * ((z * S) - 1) )/( Math.sqrt(C) )) ; //m
+	//  m =         m          +       m          + ( m * (   unitless) )/( unitless     )
+		if ( A>0.0 && y<0.0 ) {
+			//increment z_low until y >0.0
+			y = 0;
+		};
+		x = Math.sqrt( y / C );
+	//	m^(1/2)=  sqrt  (m / unitless)
+		t = ( (Math.pow(x,3) * S) + (A * Math.sqrt(y)) ) / ( Math.sqrt(mu) )
+	//  s = ( (km^(3/2)*unitless) + (m * sqrt( m )   ) ) / (sqrt (m^3/s^2 )
+	//  s = ( (                m^(3/2)                   / (m^(3/2)  * 1/s  )
+	//  s = (    1   /  (1/s)
+	//  s = (   s    )
+		if (t <= t_delta) {
+			z_low = z;
+		} else {
+			z_up = z
+		};
+
+		z = (z_up + z_low) / 2;
+
+		if (z > 0.000001) {
+			//Transfer orbit is looking parabolic
+			C = ( 1.0 - Math.cos(Math.sqrt(z)) ) / ( z );
+			S = ( Math.sqrt(z) - Math.sin(Math.sqrt(z)) ) / ( Math.pow(z,3/2) );
+		} else if (z < -0.000001) {
+			//Transfer orbit is looking hyperbolic
+			C = ( 1.0 - Math.cosh(Math.sqrt(-z)) ) / ( z );
+			S = ( Math.sinh(Math.sqrt(-z)) - Math.sqrt(-z) ) / ( Math.pow(-z,3/2) );
+		} else {
+			C = 0.5;
+			S = 1/6;
+		};
+		i++
+		//console.log(Math.abs( t-t_delta));
+		if (i>150) {
+		    //console.log("Lambert solver exceeded 150 iterations; Breaking",time1,time2);
+		    throw 'Lambert solver exceeded 150 iterations; Breaking '+duration
+		    //return -1;
+		};
+	};
+	var f =  1 - ( y / r_initial_length );  //km/km = no unit
+	var dg = 1 - ( y / r_final_length );    //km/km = no units
+	var g = A * Math.sqrt( y / mu );    // km * sqrt(km / km^3/s^2) = km * sqrt(km^2/s^2) = km * km/s = km^2/s
+
+	var v_initial = new THREE.Vector3(0,0,0);
+	var fr_initial = new THREE.Vector3(0,0,0);
+	fr_initial.copy(r_initial);
+	fr_initial.multiplyScalar(f);
+	v_initial.subVectors(r_final,fr_initial).divideScalar(g); //in km/s
+	//console.log("v_initial = "+v_initial.length());
+
+	var v_final = new THREE.Vector3(0,0,0);
+	var dgr_final = new THREE.Vector3(0,0,0);
+	dgr_final.copy(r_final);
+	dgr_final.multiplyScalar(dg);
+	v_final.subVectors(dgr_final,r_initial).divideScalar(g); //in km/s
+	//console.log("v_final = "+v_final.length());
+
+	//v_delta = v_final.length() + v_final.length();  //in km/s
+	//console.log("v_delta = "+v_delta);
+
+	var vectors = {
+					 departure:	v_initial
+					,arrival:	v_final
+					};
+
+	return vectors;
+
+}//end of lambert definition
+
 //File: /Volumes/Macintosh HD 2/Users/shariton/Documents/kepler.js/src/examples.js
 
 /** A collection of example Celestial Bodies using this library
@@ -2715,3 +3084,24 @@ EXAMPLE.voyager1 = new KEPLER.Spacecraft(
         ,1.792513338910511E+02*KEPLER.DEGREE//rotOmeg
     )
 );
+EXAMPLE.iss = new KEPLER.Spacecraft(
+     'ISS'                                  //id
+    ,370131                                 //mass
+    ,0                                      //fuelMax
+    ,0                                      //exhaustV
+    ,new KEPLER.Orbit(
+        EXAMPLE.Earth                       //Primary
+        ,6.759645260772543E+03*KEPLER.KM    //a
+        ,2.048033237342145E-03              //ecc
+        ,3.292219482993897E+02*KEPLER.DEGREE//mAnomaly
+        ,5.217497644819966E+01*KEPLER.DEGREE//rotI
+        ,8.611226361123934E+01*KEPLER.DEGREE//rotW
+        ,2.592819760903027E+02*KEPLER.DEGREE//rotOmeg
+    )
+);
+
+EXAMPLE.TransferISSToMoon = new KEPLER.Transfer(
+     EXAMPLE.iss.orbit
+    ,EXAMPLE.Luna.orbit
+    ,3*KEPLER.DAY
+)

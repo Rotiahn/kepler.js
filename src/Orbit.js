@@ -268,7 +268,79 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
         this.updateElement.periT();
         this.updateElement.E();
     };
+    /** update Orbital Elements based on Cartesian Position and Velocity
+    * @function keplerize
+    * @param {KEPLER.Vector3} position - Vector of current position
+    * @param {KEPLER.Vector3} velocity - Vector of current velocity
+    * @see {@link http://microsat.sm.bmstu.ru/e-library/Ballistics/kepler.pdf}
+    * @private
+    */
+    var keplerize = function(mu,position,velocity) {
+        var r = position.clone(); // m
+        var v = velocity.clone(); // m/s
 
+    	//This Function is meant to be used for determining orbits from points and velocities.
+    	//It is primarily used for applying velocity changes and calculating resulting new orbital elements
+        var ang_momentum = new KEPLER.Vector3(0,0,0);
+	    ang_momentum.crossVectors(position,velocity)  // m^2/s
+
+        var rot_omeg 	= Math.atan( ang_momentum.x / (-ang_momentum.y) ); //radians
+        var rot_i 		= Math.atan( Math.sqrt(ang_momentum.x*ang_momentum.x + ang_momentum.y*ang_momentum.y) / ang_momentum.z ) //radians
+
+    	//rotate position into orbital frame:
+        var r2 = new THREE.Vector3(0,0,0);
+	    r2.copy(r); // m
+
+        var axis_omeg = new THREE.Vector3(0,0,1); //radians
+        var matrix_omeg = new THREE.Matrix4().makeRotationAxis( axis_omeg, rot_omeg);
+        r2.applyMatrix4(matrix_omeg);
+
+        var axis_i = new THREE.Vector3(1,0,0);
+        var matrix_i = new THREE.Matrix4().makeRotationAxis( axis_i, rot_i);
+        r2.applyMatrix4(matrix_i);
+
+        //determine argument of latitude u, where tan(u) = tan(w+v) = p2/p1
+      	var arg_lat = Math.atan(r2.y/r2.x);  //radians
+
+        // a = (GM * r) / (2GM - r*velocity_scalar^2)
+        // e = SQRT(1 - (h^2 / (GM*a))
+
+        var mu = mu;  //  m^3/s^2
+        var r_scalar = r.length();  // m
+        var v_scalar = v.length();  // m
+        var h_scalar = ang_momentum.length(); // m^2/s
+        var a = (mu * r_scalar) / (2*mu - r_scalar*(v_scalar*v_scalar));  //  m^4/s^2  / (m^3/s^2 - m*m/s*m/s) = m^4/s^2  / m^3/s^2 = m
+        var ecc = Math.sqrt(1 - (h_scalar*h_scalar / (mu*a)));  //  m^2/s * m^2/s  / (m^3/s^2 * m) = m^4/s^2 / m^4/s^2 = no units
+
+        // radial velocity = position DOT velocity / position_scalar
+        var rad_v = position.dot(velocity) / r_scalar;  //  m*m/s / m = m/s
+
+        // cos(E) = (a-r)/(ae)
+        // sin(E) = (r_scalar*rad_v)/(ecc*sqrt(mu*a))
+        var sin_E = (a-r_scalar)/(a*ecc);
+        var cos_E = (r_scalar*rad_v)/(ecc*Math.sqrt(mu*a));
+
+        // tan(v) = ( sqrt(1-ecc*ecc)*sin_E )/( cos_E - ecc )
+        var v = Math.atan( (Math.sqrt(1-ecc*ecc)*sin_E )/( cos_E - ecc ) );  //radians
+
+        // u = w+v = arg_lat
+        // w = arg_lat-v
+        var rot_w = arg_lat - v; // radians
+
+        // E - ecc*sin(E) = M
+
+        var E = Math.asin(sin_E)  //radians
+        var M = E - ecc*sin_E;  //radians
+
+        var elements = {	 'a'       :a
+                            ,'ecc'     :ecc
+                            ,'mAnomaly':mAnomaly
+                            ,'rotI'    :rotI
+                            ,'rotW'    :rotW
+                            ,'rotOmeg' :rotOmeg
+                        };
+        return elements;
+    }
 
     //Part III: Get Functions
 
@@ -310,20 +382,20 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
     var reverseRotations = function (vector) {
         //NOTE: XY plane is the (typical) plane of reference with X+ axis = reference direction and Z+ axis = "north"
 
-        //Part I: Rotate orbital plane around z world-axis by angle -rotOmeg so that ascending node lines up with reference direction
-        var axisOmeg = new KEPLER.Vector3(0,0,1);
-        var matrixOmeg = new KEPLER.Matrix4().makeRotationAxis( axisOmeg, -rotOmeg);
-        vector.applyMatrix4(matrixOmeg);
+        //Part I: Rotate orbit around z world-axis by angle -rotW so that periapsis lines up with reference direction
+        var axisW = new KEPLER.Vector3(0,0,1);
+        var matrixW = new KEPLER.Matrix4().makeRotationAxis( axisW, -rotW);
+        vector.applyMatrix4(matrixW);
 
         //Part II: Rotate orbital plane around x world-axis by angle -rotI so that orbital plane lines up with reference plane
         var axisI = new KEPLER.Vector3(1,0,0);
         var matrixI = new KEPLER.Matrix4().makeRotationAxis( axisI, -rotI);
         vector.applyMatrix4(matrixI);
 
-        //Part III: Rotate orbit around z world-axis by angle -rotW so that periapsis lines up with reference direction
-        var axisW = new KEPLER.Vector3(0,0,1);
-        var matrixW = new KEPLER.Matrix4().makeRotationAxis( axisW, -rotW);
-        vector.applyMatrix4(matrixW);
+        //Part III: Rotate orbital plane around z world-axis by angle -rotOmeg so that ascending node lines up with reference direction
+        var axisOmeg = new KEPLER.Vector3(0,0,1);
+        var matrixOmeg = new KEPLER.Matrix4().makeRotationAxis( axisOmeg, -rotOmeg);
+        vector.applyMatrix4(matrixOmeg);
 
         return vector;
     }
@@ -382,7 +454,35 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
 
          return velocityFinal;
     }
+    /** Create a new (clone) Orbit with the same parameters at this one, and return it.
+    * @function clone
+    * @returns {KEPLER.Orbit} - Returns a new KEPLER.Orbit with the same parameters as this one.
+    * @example
+    * //Returns orbitB is a copy of orbitB, but different objects
+    * orbitA = new KEPLER.Orbit({mass:KEPLER.SOL},100e3,0,0,0,0);
+    * orbitB = orbitA.clone();
+    * orbitA === orbitB; //false
+    * //All True:
+    * for (key in Object.keys(orbitA.getElements())) {console.log(key,':',(orbitA.getElements()[key]===orbitB.getElements()[key]));};
+    * @public
+    */
+    this.clone = function() {
+        //Part I: gather Orbital Elements
+        this.updateAllElements();
+        var elements = this.getElements();
 
+        //Part II: Create clone
+        var clone = new KEPLER.Orbit(
+             this.primary
+            ,elements.a
+            ,elements.ecc
+            ,elements.mAnomaly
+            ,elements.rotI
+            ,elements.rotW
+            ,elements.rotOmeg
+        );
+        return clone;
+    }
 
     //Part III: Update Functions
 
@@ -409,6 +509,36 @@ KEPLER.Orbit = function(primary,a,ecc,mAnomaly,rotI,rotW,rotOmeg) {
     */
     this.subTime = function(deltaTime) {
         return this.addTime(-deltaTime);
+    }
+    /** Add Cartesian velocity to this orbit to cause a change in orbital functions
+    * @function addVelocity
+    * @param {KEPLER.Vector3} deltaV - Vector to be added to the current velocity and adjust orbital elements
+    * @returns {KEPLER.Orbit} - Returns a KEPLER.Vector3 which defines the position in the orbit (INCORPORATES PRIMARY)
+    * @see {@link http://microsat.sm.bmstu.ru/e-library/Ballistics/kepler.pdf}
+    * @public
+    */
+    this.addVelocity = function(deltaV) {
+
+        //Part I: Get Cartesian elements
+        var position = this.getPosition();
+        var velocity = this.getVelocity();
+
+        //Part II: Add deltaV to velocity;
+        velocity.add(deltaV);
+
+        //Part III: Update orbital elements
+        var result = keplerize(mu,position,velocity);
+
+        a           = result.a;
+        ecc         = result.ecc;
+        mAnomaly    = result.mAnomaly;
+        rotI        = result.rotI;
+        rotW        = result.rotW;
+        rotOmeg     = result.rotOmeg;
+
+        this.updateAllElements();
+
+        return result;
     }
 
 } //end of KEPLER.Orbit()

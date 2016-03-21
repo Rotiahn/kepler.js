@@ -127,3 +127,24 @@ EXAMPLE.voyager1 = new KEPLER.Spacecraft(
         ,1.792513338910511E+02*KEPLER.DEGREE//rotOmeg
     )
 );
+EXAMPLE.iss = new KEPLER.Spacecraft(
+     'ISS'                                  //id
+    ,370131                                 //mass
+    ,0                                      //fuelMax
+    ,0                                      //exhaustV
+    ,new KEPLER.Orbit(
+        EXAMPLE.Earth                       //Primary
+        ,6.759645260772543E+03*KEPLER.KM    //a
+        ,2.048033237342145E-03              //ecc
+        ,3.292219482993897E+02*KEPLER.DEGREE//mAnomaly
+        ,5.217497644819966E+01*KEPLER.DEGREE//rotI
+        ,8.611226361123934E+01*KEPLER.DEGREE//rotW
+        ,2.592819760903027E+02*KEPLER.DEGREE//rotOmeg
+    )
+);
+
+EXAMPLE.TransferISSToMoon = new KEPLER.Transfer(
+     EXAMPLE.iss.orbit
+    ,EXAMPLE.Luna.orbit
+    ,3*KEPLER.DAY
+)
