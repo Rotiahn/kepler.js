@@ -39,9 +39,15 @@ KEPLER.AstroBody = function(id,mass,orbit) {
     this.mass = mass;       // (kg)
     /** AstroBody's orbit (kept private to avoid direct interaction)
     * @member {KEPLER.Orbit}
-    * @private
+    * @protected - orbit is accessible, and orbit functions are readable, however cannot directly change orbit to new value;
     */
     var orbit = orbit;
+    Object.defineProperties(this, {
+        orbit: {
+             enumerable: true
+            ,value: orbit
+        }
+    });
     /** List (Array) of KEPLER.AstroBody listing those AstroBodys which have this AstroBody as a primary
     * @member {array}
     * @private
