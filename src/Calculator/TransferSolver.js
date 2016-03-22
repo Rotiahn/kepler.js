@@ -4,7 +4,7 @@
  */
 KEPLER.TransferSolver = {};
 
-/** A function for calculating the transfer with minimum deltaV assuming launch immediately
+/** A function for calculating the transfer with minimum deltaV assuming launch after specific waitTime
  * @author Rotiahn / https://github.com/Rotiahn/
  * @param {KEPLER.Orbit} orbit1 - The initial orbit
  * @param {KEPLER.Orbit} orbit2 - The destination orbit (mAnomaly should be set to value corresponding to DEPARTURE time, not including waitTime)
@@ -221,7 +221,130 @@ KEPLER.TransferSolver.minDeltaV = function (orbit1, orbit2) {
 
 }
 
-/** A function for calculating the optimum transfer, optimizing for minimum time (with fixed deltaV budget)
+/** A function for calculating the optimum transfer, optimizing for minimum time (with fixed deltaV budget), assuming launch after specific waitTime
+ * @author Rotiahn / https://github.com/Rotiahn/
+ * @param {KEPLER.Orbit} orbit1 - The initial orbit
+ * @param {KEPLER.Orbit} orbit2 - The destination orbit (mAnomaly should be set to value corresponding to DEPARTURE time, not including waitTime)
+ * @param {number} maxDeltaV - the maximum amount of delta V (m/s) the vehicle may expend for the journey
+ * @module kepler
+ */
+KEPLER.TransferSolver.minTime_LaunchSpecified = function (orbit1, orbit2, maxDeltaV, waitTime = 0) {
+    var object1 = orbit1.clone();
+    var object2 = orbit2.clone();
+
+    object1.addTime(waitTime);
+    object2.addTime(waitTime);
+
+    var object1Elements = object1.getElements();
+    var object2Elements = object2.getElements();
+
+    var periodSmall = Math.min(
+                             object1Elements.T  //either full orbit of departure object
+                            ,object2Elements.T  //or the full orbit of target object
+                            );
+    var periodLarge = Math.max(
+                             object1Elements.T  //either full orbit of departure object
+                            ,object2Elements.T  //or the full orbit of target object
+                            );
+
+    var chunkSize = periodSmall/8;  //Use 1/8th orbits to decrease probability that we'll end up with multiple minima per chunk
+    var chunkCount = Math.ceil(periodLarge / chunkSize);  // We will include the entirety of last chunk, even if that chunk extends past periodLarge
+
+    var travelTimeMin = 1;
+    var travelTimeMax = chunkSize * chunkCount;
+
+    var chunkBegin = 0;
+    var chunkEnd = 0;
+    var testTime1 = 0;
+    var testTime2 = 0;
+    var resultTransfers = {};
+    for (var i=0; i< chunkCount; i++) {
+        travelTimeMin = chunkBegin = Math.ceil(   (i)*(chunkSize));
+        travelTimeMax = chunkEnd   = Math.floor((i+1)*(chunkSize));
+
+        object1 = orbit1.clone();
+        object2 = orbit2.clone();
+
+        var j = 0;
+
+        do {
+            testTime1 = Math.ceil( (travelTimeMin + travelTimeMax)/2 );
+            testVectors1 = KEPLER.Lambert(object1,object2,testTime1);
+            //console.log(testVectors1);
+            if (testVectors1 !== 0 && testVectors1 !== -1) {
+                var deltaV1 = testVectors1.departure.length() + testVectors1.arrival.length();
+            }
+
+            testTime2 = testTime1+1;
+            testVectors2 = KEPLER.Lambert(object1,object2,testTime2);
+            //console.log(testVectors2);
+            if (testVectors2 !== 0 && testVectors2 !== -1) {
+                var deltaV2 = testVectors2.departure.length() + testVectors2.arrival.length();
+            }
+
+
+            //console.log(i,j,'|',testVectors1,testVectors2);
+            var deltaVSlope = (deltaV2-deltaV1)/1;
+
+            //console.log(
+            //     i
+            //    ,j
+            //    ,'|'
+            //    ,testTime1
+            //    ,travelTimeMin
+            //    ,travelTimeMax
+            //    ,'|'
+            //    ,deltaV1
+            //    ,deltaV2
+            //    ,deltaVSlope
+            //);
+//
+            if (deltaVSlope === undefined || isNaN(deltaVSlope) ) {
+                //testTime1 or TestTime2 failed Lambert. Assume this means that travel time is not enough
+                travelTimeMin = testTime1;
+            } else if (deltaV1 <= maxDeltaV ) {
+                //testTime1 is an allowable amount of deltaV, therefore fastest allowable transfer will be here or before here
+                //testTime1 is a new maximum amount of travel time
+                travelTimeMax = testTime1;
+            } else {
+                //testTime1 is not an allowable solution (too much delta_V), so see if local minima is before or after this time
+                if (deltaVSlope > 0) {
+                    //deltaV is increasing, set departTimeMax to be testTime1 (minima must be before this time)
+                    travelTimeMax = testTime1;
+                } else if (deltaVSlope < 0) {
+                    //deltaV is decreasing, set departTimeMin to be testTime1 (minima must be after this time)
+                    travelTimeMin = testTime1;
+                } else {
+                    //deltaV slope is 0, set departTimeMin to be testTime1 AND set departTimeMax to be testTime2  (we stumbled upon the minima exactly)
+                    //However, deltaV is still too high, so this chunk won't work.
+                    travelTimeMin = testTime1;
+                    travelTimeMax = testTime2;
+                }
+
+
+            }
+            j++;
+            if (j>100) {throw 'KEPLER.TransferSolver.minTime_LaunchSpecified took too long on chunk '+i+' to calculate transfer';};
+
+
+        } while (travelTimeMax-travelTimeMin > 1); // Found local minima
+        var testTransfer1 = new KEPLER.Transfer(object1,object2,testTime1);
+
+        if ( testTransfer1.delta_v <= maxDeltaV) {
+            //Found an acceptable solution, return it
+            //console.log('I FOUND ONE!',testTransfer1);
+            return testTransfer1;
+        } else {
+            //This chunk does not have an acceptable minima, move on to the next one.
+        }
+
+    }
+    //tested all chunks without acceptable solution, this problem is not solvable with maxDeltaV
+    //console.log('Nothing here :-(');
+    return -1;
+
+}
+/** A function for calculating the optimum transfer, optimizing for minimum time (with fixed deltaV budget), allows departure delays
  * @author Rotiahn / https://github.com/Rotiahn/
  * @param {KEPLER.Orbit} orbit1 - The initial orbit
  * @param {KEPLER.Orbit} orbit2 - The destination orbit (mAnomaly should be set to value corresponding to DEPARTURE time)

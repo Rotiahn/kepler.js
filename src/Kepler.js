@@ -3,7 +3,7 @@
  * @namespace kepler
  */
 
-var KEPLER = { VERSION: '0.0.6' };
+var KEPLER = { VERSION: '0.0.7' };
 
 
 //CONSTANTS
