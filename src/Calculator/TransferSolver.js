@@ -82,53 +82,30 @@ KEPLER.TransferSolver.minDeltaV_LaunchSpecified = function (orbit1, orbit2, wait
     var travelTimeMin = 1;
     var travelTimeMax = periodLarge;
 
-    var testTime1 = Math.ceil( (travelTimeMin + travelTimeMax)/2 );
-    var testVectors1 = KEPLER.Lambert(object1,object2,testTime1);
-    var deltaV1 = testVectors1.departure.length() + testVectors1.arrival.length();
 
-    var testTime2 = testTime1+1;
-    var testVectors2 = KEPLER.Lambert(object1,object2,testTime2);
-    var deltaV2 = testVectors2.departure.length() + testVectors2.arrival.length();
 
-    var deltaVSlope = (deltaV2-deltaV1)/1; //When deltaVSlope = 0, we have reached an extrema.
+    var optimumTime = KEPLER.TransferSolver.bisectionSlopeSolver(
+         object1        //testArg1
+        ,object2        //testArg2
+        ,travelTimeMin  //minX
+        ,travelTimeMax  //maxX
+        ,function(object1,object2,x) {
+            return new KEPLER.Transfer(object1,object2,x);
+        } //testFunction
+        ,function(x,y) {
+            //x is Transfer(time1), y is Transfer(time2)
+            var deltaV1 = x.delta_v;
+            var deltaV2 = y.delta_v;
 
-    //console.log(testTime1,testTime2,deltaV1,deltaV2,deltaVSlope);
+            var deltaVSlope = (deltaV2-deltaV1)/1; //When deltaVSlope = 0, we have reached an extrema.
 
-    var i = 0;
+            //when slope is positive, we want to go smaller
 
-    while ( travelTimeMax-travelTimeMin > 1 ) {
+            return -deltaVSlope;
+        }//comparator
+    );
 
-        if (deltaVSlope > 0) {
-            //deltaV is increasing, set travelTimeMax to be testTime1 (minima must be before this time)
-            travelTimeMax = testTime1;
-        } else if (deltaVSlope < 0) {
-            //deltaV is decreasing, set travelTimeMin to be testTime1 (minima must be after this time)
-            travelTimeMin = testTime1;
-        } else {
-            //deltaV is 0, set travelTimeMin to be testTime1 AND set travelTimeMax to be testTime2  (we stumbled upon the minima exactly)
-            travelTimeMin = testTime1;
-            travelTimeMax = testTime2;
-        }
-
-        testTime1 = Math.ceil( (travelTimeMin + travelTimeMax)/2 );
-        testVectors1 = KEPLER.Lambert(object1,object2,testTime1);
-        deltaV1 = testVectors1.departure.length() + testVectors1.arrival.length();
-
-        testTime2 = testTime1+1;
-        testVectors2 = KEPLER.Lambert(object1,object2,testTime2);
-        deltaV2 = testVectors2.departure.length() + testVectors2.arrival.length();
-
-        deltaVSlope = (deltaV2-deltaV1)/1;
-
-        //console.log('x',i,testTime1,travelTimeMin,travelTimeMax,deltaV1,deltaV2,deltaVSlope);
-
-        i++;
-        if (i>100) {throw 'KEPLER.TransferSolver.minDeltaV_LaunchSpecified took too long to calculate transfer';};
-
-    }
-    //Found Optimum Travel time: testTime1
-
-    var optimumTransfer = new KEPLER.Transfer(object1,object2,testTime1);
+    var optimumTransfer = new KEPLER.Transfer(object1,object2,optimumTime);
     return optimumTransfer;
 }
 
