@@ -4,7 +4,55 @@
  */
 KEPLER.TransferSolver = {};
 
-/** A function for calculating the transfer with minimum deltaV assuming launch immediately
+/** A function which returns a value to be tested for running functions multiple times to locate extrema using slope
+ * @author Rotiahn / https://github.com/Rotiahn/
+ * @param {} testArg1 - first argument of testFunction
+ * @param {} testArg2 - second argument of testFunction
+ * @param {number} minX - the minimum value for X
+ * @param {number} maxX - the maximum value for X
+ * @param {function({},{},number):number} testFunction - the function to use for generating values to measure slope from.  Must take testArg1, testArg2 and a number (where minX<=number<=maxX) as arguments. Must return a number.
+ * @param {function(number,number):number} comparator - a function which takes two values and returns a number evaluating
+ * @returns {number} transfer - The value of testX1 reached based on the comparator.
+ * @module kepler
+ */
+KEPLER.TransferSolver.bisectionSlopeSolver = function(testArg1, testArg2, minX, maxX, testFunction, comparator) {
+    var i = 0;
+
+    var  testX1,testX2,testValue1,testValue2,compareResult;
+    do {
+        testX1 = Math.ceil( (minX + maxX)/2 );
+        testValue1 = testFunction(testArg1,testArg2,testX1);
+
+        testX2 = testX1+1;
+        testValue2 = testFunction(testArg1,testArg2,testX2);
+
+        compareResult = comparator(testValue1,testValue2);
+
+        //console.log(i,testX1,testX2,'|',testValue1,testValue2,'|',compareResult)
+
+        if (compareResult > 0) {
+            //compareResult is positive, value we're looking for is larger than our current testX1
+            minX = testX1;
+        } else if (compareResult < 0) {
+            //compareResult is negative, value we're looking for is smaller than our current testX1
+            maxX = testX1;
+        } else {
+            //compareResult is zero, set minX to be testX1 AND set maxX to be testX2  (we stumbled upon the value exactly)
+            minX = testX1;
+            maxX = testX2;
+        }
+
+        i++;
+        if (i>100) {throw 'KEPLER.TransferSolver.bisectionSlopeSolver took too long to calculate using:\n',testFunction;};
+
+    } while ( maxX-minX > 1 );
+
+    //Found Solution
+    return testX1;
+}
+
+
+/** A function for calculating the transfer with minimum deltaV assuming launch after specific waitTime
  * @author Rotiahn / https://github.com/Rotiahn/
  * @param {KEPLER.Orbit} orbit1 - The initial orbit
  * @param {KEPLER.Orbit} orbit2 - The destination orbit (mAnomaly should be set to value corresponding to DEPARTURE time, not including waitTime)
