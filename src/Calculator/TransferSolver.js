@@ -43,15 +43,13 @@ KEPLER.TransferSolver.bisectionSlopeSolver = function(testArg1, testArg2, minX, 
         }
 
         i++;
-        if (i>100) {throw 'KEPLER.TransferSolver.bisectionSlopeSolver took too long to calculate using:\n',testFunction;};
+        if (i>100) {throw 'KEPLER.TransferSolver.bisectionSlopeSolver took too long to calculate using:\n'+testFunction;};
 
     } while ( maxX-minX > 1 );
 
     //Found Solution
     return testX1;
 }
-
-
 /** A function for calculating the transfer with minimum deltaV assuming launch after specific waitTime
  * @author Rotiahn / https://github.com/Rotiahn/
  * @param {KEPLER.Orbit} orbit1 - The initial orbit
@@ -232,6 +230,19 @@ KEPLER.TransferSolver.minDeltaV = function (orbit1, orbit2) {
         }
         //minimum deltaV found for this chunk, save it to array
         resultTransfers[testTime1] = testTransfer1;
+        console.log(
+             i
+        //    ,j
+            ,'|'
+            ,testTime1
+        //    ,departTimeMin
+        //    ,departTimeMax
+        //    ,'|'
+            ,testTransfer1.delta_v
+        //    ,testTransfer2.delta_v
+        //    ,deltaVSlope
+        );
+
     }
     //All chunk minimum deltaVs found.  Now choose lowest deltaV option.  starting bestTransfer = last testTransfer1
     var bestTransfer = testTransfer1;
@@ -239,6 +250,113 @@ KEPLER.TransferSolver.minDeltaV = function (orbit1, orbit2) {
     for (chunk in resultTransfers) {
         if (resultTransfers[chunk].delta_v <= bestTransfer.delta_v) {
             bestTransfer = resultTransfers[chunk];
+        }
+    }
+
+    return bestTransfer;
+
+}
+KEPLER.TransferSolver.minDeltaV2 = function (orbit1, orbit2) {
+    //Given a starting orbit, ending orbit, find the next instance of a transfer orbit which is the optimum deltaV transfer.
+    // Allows delays in departure
+    // Searches launch times based on orbital periods of bodies in question.
+
+    //Need a mechanism for optimizing non-coplanar comparisons.
+    // Idea1 -  Chunks + binary tree solver:
+    //          1. Break potential launch times into X chunks, where X = (larger Period / smaller period). Chunk size = smaller period
+    //          3. Define chunkBegin & chunkEnd
+    //          4. Test point = (chunkBegin + chunkEnd) /2
+    //          5. Find deltaV at Test Point (deltaV0)
+    //          6. Find deltaV at test point+1s (deltaV1)
+    //          7. Determine deltaV slope (deltaV1-deltaV0)
+    //          8. If deltaV slope >0, chunkMax = Testpoint, goto 4
+    //          9. If deltaV slope <0, chunkMin = Testpoint, goto 4
+    //          10.If deltaV slope ~=0, Found minimum deltaV!
+    //
+    // Idea2 - Global Binary Tree solver (cannot account for multiple local minima)
+    // Idea3 - Modified Lambert Solver?
+
+    // Currently Using Idea1 - This method is computationally expensive.  Future TODO: implement idea3 or alternate faster solution.
+
+    var object1 = orbit1.clone();
+    var object2 = orbit2.clone();
+
+    var object1Elements = object1.getElements();
+    var object2Elements = object2.getElements();
+
+    var periodSmall = Math.min(
+                             object1Elements.T  //either full orbit of departure object
+                            ,object2Elements.T  //or the full orbit of target object
+                            );
+    var periodLarge = Math.max(
+                             object1Elements.T  //either full orbit of departure object
+                            ,object2Elements.T  //or the full orbit of target object
+                            );
+
+
+    var chunkSize = periodSmall/8;  //Use 1/8th orbits to decrease probability that we'll end up with multiple minima per chunk
+    var chunkCount = Math.ceil(periodLarge / chunkSize);  // We will include the entirety of last chunk, even if that chunk extends past periodLarge
+
+    var departTimeMin = 0;
+    var departTimeMax = chunkSize * chunkCount;
+    var travelTimeMin = 1;
+    var travelTimeMax = periodLarge;
+
+    var resultTransfers = {};
+    //Cycle through each Chunk and determine its minima to identify chunk with preferred
+    for (var i=0; i< chunkCount; i++) {
+        departTimeMin = chunkBegin = Math.ceil(   (i)*(chunkSize));
+        departTimeMax = chunkEnd   = Math.floor((i+1)*(chunkSize));
+
+        object1 = orbit1.clone();
+        object2 = orbit2.clone();
+
+        var j = 0;
+
+        var optimumTime = KEPLER.TransferSolver.bisectionSlopeSolver(
+             object1        //testArg1
+            ,object2        //testArg2
+            ,departTimeMin  //minX
+            ,departTimeMax  //maxX
+            ,function(object1,object2,x) {
+                return KEPLER.TransferSolver.minDeltaV_LaunchSpecified(object1,object2,x);
+            } //testFunction
+            ,function(x,y) {
+                //x is Transfer(departTime1), y is Transfer(departTime2)
+                var deltaV1 = x.delta_v;
+                var deltaV2 = y.delta_v;
+
+                var deltaVSlope = (deltaV2-deltaV1)/1; //When deltaVSlope = 0, we have reached an extrema.
+
+                //when slope is positive, we want to go smaller
+
+                return -deltaVSlope;
+            }//comparator
+        );
+
+        //minimum deltaV found for this chunk, save it to array
+        resultTransfers[optimumTime] = KEPLER.TransferSolver.minDeltaV_LaunchSpecified(object1,object2,optimumTime);
+        console.log(
+             i
+        //    ,j
+            ,'|'
+            ,optimumTime
+        //    ,departTimeMin
+        //    ,departTimeMax
+        //    ,'|'
+            ,resultTransfers[optimumTime] .delta_v
+        //    ,testTransfer2.delta_v
+        //    ,deltaVSlope
+        );
+
+    }
+    //All chunk minimum deltaVs found.  Now choose lowest deltaV option.  starting bestTransfer = last testTransfer1
+    var bestTransfer = resultTransfers[optimumTime] ;
+    console.log(resultTransfers);
+    for (time in resultTransfers) {
+        //console.log(time);
+        if (resultTransfers[time].delta_v <= bestTransfer.delta_v) {
+            bestTransfer = resultTransfers[time];
         }
     }
 
