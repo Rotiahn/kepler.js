@@ -95,7 +95,7 @@ KEPLER.Lambert = function(orbit1,orbit2,duration) {
 		i++
 		//console.log(Math.abs( t-t_delta));
 		if (i>150) {
-		    //console.log("Lambert solver exceeded 150 iterations; Breaking",duration);
+		    //console.warn("Lambert solver exceeded 150 iterations; Breaking",duration);
 		    //throw 'Lambert solver exceeded 150 iterations; Breaking '+duration
 		    return -1;
 		};
