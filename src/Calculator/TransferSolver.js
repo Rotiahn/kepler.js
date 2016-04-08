@@ -186,6 +186,7 @@ KEPLER.TransferSolver.minDeltaV = function (orbit1, orbit2) {
         object1 = orbit1.clone();
         object2 = orbit2.clone();
 
+        //console.log(departTimeMin,departTimeMax);
 
         var optimumTime = KEPLER.TransferSolver.bisectionSlopeSolver(
              departTimeMin  //minX
@@ -193,14 +194,22 @@ KEPLER.TransferSolver.minDeltaV = function (orbit1, orbit2) {
             ,function(x,args) {
                 var object1 = args.testArg1;
                 var object2 = args.testArg2;
-                return new KEPLER.TransferSolver.minDeltaV_LaunchSpecified(object1,object2,x); //returns KEPLER.Transfer()
+                var transferX =  new KEPLER.TransferSolver.minDeltaV_LaunchSpecified(object1,object2,x); //returns KEPLER.Transfer()
+                return {
+                    waitTime:x
+                    ,transfer:transferX
+                };
             } //testFunction
-            ,function(x,y) {
+            ,function(x,y,minX,maxX) {
                 //x is Transfer(time1), y is Transfer(time2)
-                var deltaV1 = x.delta_v;
-                var deltaV2 = y.delta_v;
+                var deltaV1 = x.transfer.delta_v;
+                var deltaV2 = y.transfer.delta_v;
 
                 var deltaVSlope = (deltaV2-deltaV1)/1; //When deltaVSlope = 0, we have reached an extrema.
+
+                //console.log('x','|',x.duration,deltaV1);
+                //console.log('y','|',minX().waitTime,x.waitTime,maxX().waitTime,'|',deltaV1,deltaV2,deltaVSlope);
+
 
                 //when slope is positive, we want to go smaller
 
@@ -224,7 +233,7 @@ KEPLER.TransferSolver.minDeltaV = function (orbit1, orbit2) {
         ////    ,departTimeMin
         ////    ,departTimeMax
         ////    ,'|'
-        //    ,resultTransfers[optimumTime]
+        //    ,resultTransfers[optimumTime].delta_v
         ////    ,testTransfer2.delta_v
         ////    ,deltaVSlope
         //);
@@ -239,7 +248,7 @@ KEPLER.TransferSolver.minDeltaV = function (orbit1, orbit2) {
     for (chunk in resultTransfers) {
         if (resultTransfers[chunk].delta_v <= bestTransfer.transfer.delta_v) {
             bestTransfer = {
-                waitTime: optimumTime //WaitTime
+                waitTime: chunk //WaitTime
                 ,transfer: resultTransfers[chunk]
             };
         }
@@ -442,18 +451,18 @@ KEPLER.TransferSolver.minTime = function (orbit1, orbit2, maxDeltaV) {
         //minimum deltaV found for this chunk, save it to array
         resultTransfers[optimumTime] = KEPLER.TransferSolver.minTime_LaunchSpecified(object1,object2,maxDeltaV,optimumTime);
 
-        console.log(
-             i
-        //    ,j
-            ,'|'
-            ,optimumTime
-        //    ,departTimeMin
-        //    ,departTimeMax
+        //console.log(
+        //     i
+        ////    ,j
         //    ,'|'
-        //    ,resultTransfers[optimumTime]
-            ,resultTransfers[optimumTime].delta_v
-        //    ,deltaVSlope
-        );
+        //    ,optimumTime
+        ////    ,departTimeMin
+        ////    ,departTimeMax
+        ////    ,'|'
+        ////    ,resultTransfers[optimumTime]
+        //    ,resultTransfers[optimumTime].delta_v
+        ////    ,deltaVSlope
+        //);
 
         if (resultTransfers[optimumTime].delta_v <= maxDeltaV) {
             //deltaV1 is acceptable answer in this chunk, no need to check later chunks!
