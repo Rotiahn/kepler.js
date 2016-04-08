@@ -369,11 +369,13 @@ KEPLER.TransferSolver.minTime = function (orbit1, orbit2, maxDeltaV) {
             ,departTimeMax  //maxX
             ,function(object1,object2,x) {
                 var transferX = KEPLER.TransferSolver.minTime_LaunchSpecified(object1,object2,x); //returns KEPLER.Transfer()
-                //console.log(transferX,object1,object2,x);
-                return {
-                         waitTime: x //WaitTime
-                        ,transfer: transferX
-                    };
+                //console.log(transferX,'|',x);
+                var returnObject = {
+                    waitTime: x //WaitTime
+                    ,transfer: transferX
+                };
+                //console.log(returnObject);
+                return returnObject;
             } //testFunction
             ,function(x,y,minXFunction,maxXFunction) {
                 //x is Transfer(time1), y is Transfer(time2)
@@ -388,7 +390,7 @@ KEPLER.TransferSolver.minTime = function (orbit1, orbit2, maxDeltaV) {
                 if (isNaN(deltaVSlope)) {
                     //Lambert solver couldn't make this waitTime work, choose a longer waitTime
                     return 1;
-                } else if (deltaV2 < maxDeltaV) {
+                } else if (deltaV1 < maxDeltaV) {
                     //deltaV1 is good enough, follow timeSlope to see if wait time should be increased or decreased
                     return -timeSlope;
                 } else {
