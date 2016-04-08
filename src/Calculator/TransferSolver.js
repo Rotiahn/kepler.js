@@ -6,31 +6,30 @@ KEPLER.TransferSolver = {};
 
 /** A function which returns a value to be tested for running functions multiple times to locate extrema using slope
  * @author Rotiahn / https://github.com/Rotiahn/
- * @param {} testArg1 - first argument of testFunction
- * @param {} testArg2 - second argument of testFunction
  * @param {number} minX - the minimum value for X
  * @param {number} maxX - the maximum value for X
  * @param {function({},{},number):number} testFunction - the function to use for generating values to measure slope from.  Must take testArg1, testArg2 and a number (where minX<=number<=maxX) as arguments. Must return a number.
  * @param {function(number,number):number} comparator - a function which takes two values and returns a number evaluating
+ * @param {} args - arguments to be used by testFunction. Can be anything, but usually an object containing each argument to be available to testFunction
  * @returns {number} transfer - The value of testX1 reached based on the comparator.
  * @module kepler
  */
-KEPLER.TransferSolver.bisectionSlopeSolver = function(testArg1, testArg2, minX, maxX, testFunction, comparator) {
+KEPLER.TransferSolver.bisectionSlopeSolver = function(minX, maxX, testFunction, comparator, args) {
     var i = 0;
 
     var  testX1,testX2,testValue1,testValue2,compareResult;
     do {
         testX1 = Math.ceil( (minX + maxX)/2 );
-        testValue1 = testFunction(testArg1,testArg2,testX1);
+        testValue1 = testFunction(testX1,args);
 
         testX2 = testX1+1;
-        testValue2 = testFunction(testArg1,testArg2,testX2);
+        testValue2 = testFunction(testX2,args);
 
         compareResult = comparator(
             testValue1
             ,testValue2
-            ,function() {return testFunction(testArg1,testArg2,minX);}
-            ,function() {return testFunction(testArg1,testArg2,maxX);}
+            ,function() {return testFunction(minX,args);}
+            ,function() {return testFunction(maxX,args);}
         );
 
         //console.log(i,testX1,testX2,'|',testValue1,testValue2,'|',compareResult)
@@ -61,6 +60,8 @@ KEPLER.TransferSolver.bisectionSlopeSolver = function(testArg1, testArg2, minX, 
  * @param {KEPLER.Orbit} orbit2 - The destination orbit (mAnomaly should be set to value corresponding to DEPARTURE time, not including waitTime)
  * @param {number} waitTime - (Default:0) The amount of time (s) the solver should add before running calculation (i.e. the amount of time to delay departure time).
  * @returns {KEPLER.Transfer} transfer - The optimum transfer orbit to minimize deltaV launching now.
+ * @example
+ * a = KEPLER.TransferSolver.minDeltaV_LaunchSpecified(earth,mars,60*KEPLER.DAY);
  * @module kepler
  */
 KEPLER.TransferSolver.minDeltaV_LaunchSpecified = function (orbit1, orbit2, waitTime = 0) {
@@ -88,11 +89,11 @@ KEPLER.TransferSolver.minDeltaV_LaunchSpecified = function (orbit1, orbit2, wait
 
 
     var optimumTime = KEPLER.TransferSolver.bisectionSlopeSolver(
-         object1        //testArg1
-        ,object2        //testArg2
-        ,travelTimeMin  //minX
+         travelTimeMin  //minX
         ,travelTimeMax  //maxX
-        ,function(object1,object2,x) {
+        ,function(x,args) {
+            var object1 = args.testArg1;
+            var object2 = args.testArg2;
             return new KEPLER.Transfer(object1,object2,x);
         } //testFunction
         ,function(x,y) {
@@ -106,6 +107,10 @@ KEPLER.TransferSolver.minDeltaV_LaunchSpecified = function (orbit1, orbit2, wait
 
             return -deltaVSlope;
         }//comparator
+        ,{
+             testArg1: object1        //testArg1
+            ,testArg2: object2        //testArg2
+        } //args
     );
 
     var optimumTransfer = new KEPLER.Transfer(object1,object2,optimumTime);
@@ -116,6 +121,8 @@ KEPLER.TransferSolver.minDeltaV_LaunchSpecified = function (orbit1, orbit2, wait
  * @author Rotiahn / https://github.com/Rotiahn/
  * @param {KEPLER.Orbit} orbit1 - The initial orbit
  * @param {KEPLER.Orbit} orbit2 - The destination orbit (mAnomaly should be set to value corresponding to DEPARTURE time)
+ * @example
+ * a = KEPLER.TransferSolver.minDeltaV(earth,mars);
  * @module kepler
  */
 KEPLER.TransferSolver.minDeltaV = function (orbit1, orbit2) {
@@ -181,11 +188,11 @@ KEPLER.TransferSolver.minDeltaV = function (orbit1, orbit2) {
 
 
         var optimumTime = KEPLER.TransferSolver.bisectionSlopeSolver(
-             object1        //testArg1
-            ,object2        //testArg2
-            ,departTimeMin  //minX
+             departTimeMin  //minX
             ,departTimeMax  //maxX
-            ,function(object1,object2,x) {
+            ,function(x,args) {
+                var object1 = args.testArg1;
+                var object2 = args.testArg2;
                 return new KEPLER.TransferSolver.minDeltaV_LaunchSpecified(object1,object2,x); //returns KEPLER.Transfer()
             } //testFunction
             ,function(x,y) {
@@ -199,6 +206,10 @@ KEPLER.TransferSolver.minDeltaV = function (orbit1, orbit2) {
 
                 return -deltaVSlope;
             }//comparator
+            ,{
+                 testArg1:object1        //testArg1
+                ,testArg2:object2        //testArg2
+            } //args
         );
 
 
@@ -243,6 +254,8 @@ KEPLER.TransferSolver.minDeltaV = function (orbit1, orbit2) {
  * @param {KEPLER.Orbit} orbit1 - The initial orbit
  * @param {KEPLER.Orbit} orbit2 - The destination orbit (mAnomaly should be set to value corresponding to DEPARTURE time, not including waitTime)
  * @param {number} maxDeltaV - the maximum amount of delta V (m/s) the vehicle may expend for the journey
+ * @example
+ * a = KEPLER.TransferSolver.minTime_LaunchSpecified(earth,mars,17000,60*KEPLER.DAY);
  * @module kepler
  */
 KEPLER.TransferSolver.minTime_LaunchSpecified = function (orbit1, orbit2, maxDeltaV, waitTime = 0) {
@@ -268,11 +281,11 @@ KEPLER.TransferSolver.minTime_LaunchSpecified = function (orbit1, orbit2, maxDel
     var travelTimeMax = periodLarge;
 
     var optimumTime = KEPLER.TransferSolver.bisectionSlopeSolver(
-         object1        //testArg1
-        ,object2        //testArg2
-        ,travelTimeMin  //minX
+         travelTimeMin  //minX
         ,travelTimeMax  //maxX
-        ,function(object1,object2,x) {
+        ,function(x,args) {
+            var object1 = args.testArg1;
+            var object2 = args.testArg2;
             return new KEPLER.Transfer(object1,object2,x);
         } //testFunction
         ,function(x,y,minXFunction,maxXFunction) {
@@ -306,6 +319,10 @@ KEPLER.TransferSolver.minTime_LaunchSpecified = function (orbit1, orbit2, maxDel
                 }
             }
         }//comparator
+        ,{
+             testArg1:object1        //testArg1
+            ,testArg2:object2        //testArg2
+        } //args
     );
 
     var optimumTransfer1 = new KEPLER.Transfer(object1,object2,optimumTime);
@@ -322,6 +339,8 @@ KEPLER.TransferSolver.minTime_LaunchSpecified = function (orbit1, orbit2, maxDel
  * @param {KEPLER.Orbit} orbit1 - The initial orbit
  * @param {KEPLER.Orbit} orbit2 - The destination orbit (mAnomaly should be set to value corresponding to DEPARTURE time)
  * @param {number} maxDeltaV - the maximum amount of delta V (m/s) the vehicle may expend for the journey
+ * @example
+ * a = KEPLER.TransferSolver.minTime(earth,mars,60*KEPLER.DAY);
  * @module kepler
  */
 KEPLER.TransferSolver.minTime = function (orbit1, orbit2, maxDeltaV) {
@@ -363,12 +382,13 @@ KEPLER.TransferSolver.minTime = function (orbit1, orbit2, maxDeltaV) {
         object2 = orbit2.clone();
 
         var optimumTime = KEPLER.TransferSolver.bisectionSlopeSolver(
-             object1        //testArg1
-            ,object2        //testArg2
-            ,departTimeMin  //minX
+             departTimeMin  //minX
             ,departTimeMax  //maxX
-            ,function(object1,object2,x) {
-                var transferX = KEPLER.TransferSolver.minTime_LaunchSpecified(object1,object2,x); //returns KEPLER.Transfer()
+            ,function(x,args) {
+                var object1 = args.testArg1;
+                var object2 = args.testArg2;
+                var maxDeltaV = args.testArg3;
+                var transferX = KEPLER.TransferSolver.minTime_LaunchSpecified(object1,object2,maxDeltaV,x); //returns KEPLER.Transfer()
                 //console.log(transferX,'|',x);
                 var returnObject = {
                     waitTime: x //WaitTime
@@ -411,6 +431,11 @@ KEPLER.TransferSolver.minTime = function (orbit1, orbit2, maxDeltaV) {
                     }
                 }
             }//comparator
+            ,{
+                 testArg1:object1        //testArg1
+                ,testArg2:object2        //testArg2
+                ,testArg3:maxDeltaV      //testArg3
+            } //args
         );
 
 
