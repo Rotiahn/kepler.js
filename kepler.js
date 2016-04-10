@@ -7,7 +7,7 @@
  * @namespace kepler
  */
 
-var KEPLER = { VERSION: '0.0.7' };
+var KEPLER = { VERSION: '0.1.0' };
 
 
 //CONSTANTS
@@ -3447,19 +3447,19 @@ KEPLER.TransferSolver.minTime = function (orbit1, orbit2, maxDeltaV) {
  *
  */
 
-var EXAMPLE = {};
+KEPLER.EXAMPLE = {};
 
-EXAMPLE.Sol = new KEPLER.AstroBody(
+KEPLER.EXAMPLE.Sol = new KEPLER.AstroBody(
      'Sol'
     ,KEPLER.SOL_MASS
     ,new KEPLER.NULL_ORBIT()
 );
 
-EXAMPLE.Mercury = new KEPLER.AstroBody(
+KEPLER.EXAMPLE.Mercury = new KEPLER.AstroBody(
      'Mercury'
     ,3.302e23                                //mass
     ,new KEPLER.Orbit(
-        EXAMPLE.Sol                         //Primary
+        KEPLER.EXAMPLE.Sol                         //Primary
         ,3.870982252717257e-01*KEPLER.AU    //a
         ,2.056302512089075e-01              //ecc
         ,1.727497133778637e+02*KEPLER.DEGREE//mAnomaly
@@ -3469,11 +3469,11 @@ EXAMPLE.Mercury = new KEPLER.AstroBody(
     )
 );
 
-EXAMPLE.Venus = new KEPLER.AstroBody(
+KEPLER.EXAMPLE.Venus = new KEPLER.AstroBody(
      'Venus'
     ,4.8685e24                               //mass
     ,new KEPLER.Orbit(
-        EXAMPLE.Sol                         //Primary
+        KEPLER.EXAMPLE.Sol                         //Primary
         ,7.233268496749391e-01*KEPLER.AU    //a
         ,6.755697267164094e-03              //ecc
         ,4.931425178852966e+01*KEPLER.DEGREE//mAnomaly
@@ -3483,11 +3483,11 @@ EXAMPLE.Venus = new KEPLER.AstroBody(
     )
 );
 
-EXAMPLE.Earth = new KEPLER.AstroBody(
+KEPLER.EXAMPLE.Earth = new KEPLER.AstroBody(
      'Earth'
     ,5.97219e24                               //mass
     ,new KEPLER.Orbit(
-        EXAMPLE.Sol                         //Primary
+        KEPLER.EXAMPLE.Sol                         //Primary
         ,1.000371833989169e+00*KEPLER.AU    //a
         ,1.704239716781501e-02              //ecc
         ,3.581891404220149e+02*KEPLER.DEGREE//mAnomaly
@@ -3497,11 +3497,11 @@ EXAMPLE.Earth = new KEPLER.AstroBody(
     )
 );
 
-EXAMPLE.Luna = new KEPLER.AstroBody(
+KEPLER.EXAMPLE.Luna = new KEPLER.AstroBody(
      'Luna'
     ,734.9e20                                //mass
     ,new KEPLER.Orbit(
-        EXAMPLE.Earth                       //Primary
+        KEPLER.EXAMPLE.Earth                       //Primary
         ,3.812186882902056e5*KEPLER.KM      //a
         ,6.476694137484437e-02              //ecc
         ,1.407402568949268e+02*KEPLER.DEGREE//mAnomaly
@@ -3511,11 +3511,11 @@ EXAMPLE.Luna = new KEPLER.AstroBody(
     )
 );
 
-EXAMPLE.Mars = new KEPLER.AstroBody(
+KEPLER.EXAMPLE.Mars = new KEPLER.AstroBody(
      'Mars'
     ,6.4185e23                               //mass
     ,new KEPLER.Orbit(
-        EXAMPLE.Sol                         //Primary
+        KEPLER.EXAMPLE.Sol                         //Primary
         ,1.523678184302188e+00*KEPLER.AU    //a
         ,9.331460653723893e-02              //ecc
         ,1.909450886999620e+01*KEPLER.DEGREE//mAnomaly
@@ -3525,11 +3525,11 @@ EXAMPLE.Mars = new KEPLER.AstroBody(
     )
 );
 
-EXAMPLE.Phobos = new KEPLER.AstroBody(
+KEPLER.EXAMPLE.Phobos = new KEPLER.AstroBody(
      'Phobos'
     ,1.08e20                                 //mass
     ,new KEPLER.Orbit(
-        EXAMPLE.Mars                        //Primary
+        KEPLER.EXAMPLE.Mars                        //Primary
         ,9.378286882214712e+03*KEPLER.KM    //a
         ,1.541577713745092e-02              //ecc
         ,3.458103658779790e+02*KEPLER.DEGREE//mAnomaly
@@ -3539,11 +3539,11 @@ EXAMPLE.Phobos = new KEPLER.AstroBody(
     )
 );
 
-EXAMPLE.Deimos = new KEPLER.AstroBody(
+KEPLER.EXAMPLE.Deimos = new KEPLER.AstroBody(
      'Deimos'
     ,1.80e20
     ,new KEPLER.Orbit(
-        EXAMPLE.Mars                        //Primary
+        KEPLER.EXAMPLE.Mars                        //Primary
         ,2.345888830758717e+04*KEPLER.KM    //a
         ,2.419395670375644e-04              //ecc
         ,2.441640161731743e+02*KEPLER.DEGREE//mAnomaly
@@ -3554,13 +3554,13 @@ EXAMPLE.Deimos = new KEPLER.AstroBody(
 );
 
 
-EXAMPLE.voyager1 = new KEPLER.Spacecraft(
+KEPLER.EXAMPLE.voyager1 = new KEPLER.Spacecraft(
      'voyager1'                             //id
     ,722                                    //mass
     ,10                                     //fuelMax
     ,3369                                   //exhaustV
     ,new KEPLER.Orbit(
-        EXAMPLE.Sol                        //Primary
+        KEPLER.EXAMPLE.Sol                        //Primary
         ,-3.220924861390099E+00*KEPLER.AU    //a
         ,3.707585664603564E+00              //ecc
         ,1.248081698810124E+03*KEPLER.DEGREE//mAnomaly
@@ -3569,13 +3569,13 @@ EXAMPLE.voyager1 = new KEPLER.Spacecraft(
         ,1.792513338910511E+02*KEPLER.DEGREE//rotOmeg
     )
 );
-EXAMPLE.iss = new KEPLER.Spacecraft(
+KEPLER.EXAMPLE.iss = new KEPLER.Spacecraft(
      'ISS'                                  //id
     ,370131                                 //mass
     ,0                                      //fuelMax
     ,0                                      //exhaustV
     ,new KEPLER.Orbit(
-        EXAMPLE.Earth                       //Primary
+        KEPLER.EXAMPLE.Earth                       //Primary
         ,6.759645260772543E+03*KEPLER.KM    //a
         ,2.048033237342145E-03              //ecc
         ,3.292219482993897E+02*KEPLER.DEGREE//mAnomaly
@@ -3585,8 +3585,8 @@ EXAMPLE.iss = new KEPLER.Spacecraft(
     )
 );
 
-EXAMPLE.TransferISSToMoon = new KEPLER.Transfer(
-     EXAMPLE.iss.orbit
-    ,EXAMPLE.Luna.orbit
+KEPLER.EXAMPLE.TransferISSToMoon = new KEPLER.Transfer(
+     KEPLER.EXAMPLE.iss.orbit
+    ,KEPLER.EXAMPLE.Luna.orbit
     ,3*KEPLER.DAY
 )
