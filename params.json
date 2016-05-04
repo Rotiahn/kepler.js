@@ -1,0 +1,6 @@
+{
+  "name": "Kepler.js",
+  "tagline": "A pure Javascript library with the aim of providing a set of tools for managing orbital dynamics.",
+  "body": "# kepler.js\r\nA pure Javascript library with the aim of providing a set of tools for managing orbital dynamics.\r\n\r\n---\r\n\r\n### Build files:\r\n* **kepler.js** - The full kepler.js library, uncompressed\r\n* **kepler.min.js** - The full kepler.js library, minified\r\n* **kepler_use_THREEJS.js** - Use this to have kepler.js use an existing [three.js][threejs] library[1], uncompressed\r\n* **kepler_use_THREEJS.min.js** - Use this to have kepler.js use an existing [three.js][threejs] library[1], minified\r\n\r\n---\r\n[1] - kepler.js utilizes the THREE.Vector3() and THREEE.Matrix4() classes for handling 3d spatial calculations.  They are normally included in the src/external/three.js folder.  If you are using the [three.js][threejs] library already, it is more efficient to tie directly to that library. \r\n\r\n[threejs]: https://github.com/mrdoob/three.js/",
+  "note": "Don't delete this file! It's used internally to help with page regeneration."
+}
