@@ -8,6 +8,13 @@
     <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
     <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
     <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+    <link rel="stylesheet" type="text/css" href="stylesheets/jquery-ui.min.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/kepler.css" media="screen">
+    <script src="javascripts/jquery-2.1.4.min.js"></script>
+    <script src="javascripts/jquery-ui.min.js"></script>
+    <script src="javascripts/three_76.min.js"></script>
+    <script src="javascripts/kepler_use_THREEJS.min.js"></script>
+    <script src="javascripts/main.js"></script>
 
     <!--[if lt IE 9]>
     <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -34,6 +41,53 @@
 <a id="keplerjs" class="anchor" href="#keplerjs" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>kepler.js</h1>
 
 <p>A pure Javascript library with the aim of providing a set of tools for managing orbital dynamics.</p>
+
+<hr>
+
+<div id='demo'>
+    <h3> Demo </h3>
+    <div id="tabs">
+        <ul>
+            <li><a href="#tab-star">Star</a></li>
+            <li><a href="#tabs-planet">Planet</a></li>
+            <li><a href="#tabs-moon">Moon</a></li>
+        </ul>
+        <div id="tab-star">
+            <p>Star</p>
+            <div>
+                <label for="a"          >a       :</label><input class = type="text" id="star-a" readonly style="border:0; color:#f6931f; font-weight:bold;">
+                <div id="slider-star-a"></div>
+            </div>
+            <div>
+                <label for="ecc"        >ecc     :</label><input type="text" id="star-ecc" readonly style="border:0; color:#f6931f; font-weight:bold;">
+                <div id="slider-star-ecc"></div>
+            </div>
+            <div>
+                <label for="mAnomaly"   >mAnomaly:</label><input type="text" id="star-mAnomaly" readonly style="border:0; color:#f6931f; font-weight:bold;">
+                <div id="slider-star-mAnomaly"></div>
+            </div>
+            <div>
+                <label for="rotI"       >rotI    :</label><input type="text" id="star-rotI" readonly style="border:0; color:#f6931f; font-weight:bold;">
+                <div id="slider-star-rotI"></div>
+            </div>
+            <div>
+                <label for="rotW"       >rotW    :</label><input type="text" id="star-rotW" readonly style="border:0; color:#f6931f; font-weight:bold;">
+                <div id="slider-star-rotW"></div>
+            </div>
+            <div>
+                <label for="rotOmeg"    >rotOmeg :</label><input type="text" id="star-rotOmeg" readonly style="border:0; color:#f6931f; font-weight:bold;">
+                <div id="slider-star-rotOmeg"></div>
+            </div>
+
+        </div>
+        <div id="tabs-planet">
+            <p>Planet</p>
+        </div>
+        <div id="tabs-moon">
+            <p>Moon</p>
+        </div>
+    </div>
+</div>
 
 <hr>
 

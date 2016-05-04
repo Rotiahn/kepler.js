@@ -1,0 +1,13 @@
+#tab-star label {
+    width:100px;
+    display:inline-block;
+}
+#tab-star input {
+    width:40px;
+    display:inline-block;
+}
+#tab-star .ui-slider {
+    margin-left:25px;
+    width:450px;
+    display:inline-block;
+}
