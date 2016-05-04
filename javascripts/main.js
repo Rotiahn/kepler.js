@@ -2,8 +2,13 @@
 
 $( document ).ready(function() {
     //Create scene and camera
-    var scene = new THREE.Scene();
-    var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera( 75, 690 / 690, 0.1, 100 );
+	light = new THREE.PointLight(0xFFFFDD);
+	amblight = new THREE.AmbientLight(0x444444);
+	scene.add(light);
+	scene.add(amblight);
+    scene.add(camera);
 
     var renderer = new THREE.WebGLRenderer();
     renderer.setSize( 690, 690 );
@@ -98,6 +103,25 @@ $( document ).ready(function() {
     $('input[id$=rotOmeg]').val( function() {
         return ($(this).parent().find("[id^=slider][id$=rotOmeg]").slider("value")  + " \xB0");
     });
+
+    star = new KEPLER.AstroBody(
+     'Star'
+    ,$("slider-star-mass").slider("value")
+    ,new KEPLER.NULL_ORBIT()
+    );
+    star.geometry = new THREE.SphereGeometry(0.1);
+    star.material = new THREE.MeshBasicMaterial( { color: 0xffff00 } );
+    star.mesh = new THREE.Mesh( star.geometry, star.material);
+    scene.add(star.mesh);
+
+    camera.position.set(0,10,10);
+    camera.lookAt(star.mesh.position);
+
+    render = function() {
+        requestAnimationFrame( render );
+        renderer.render( scene, camera );
+    }
+    render();
 
     $('#demo>h3').after( renderer.domElement );
 });
