@@ -14,7 +14,19 @@ $( document ).ready(function() {
         collapsible:true
     });
 
-    $("#slider-star-a").slider({
+    $("[id^=slider][id$=mass]").slider({
+         value:1
+        ,min:0.0
+        ,max:10.1
+        ,step:0.1
+        ,slide: function(event,ui) {
+            $(this).parent().find("input").val($(this).slider("value") + " Sols");
+        }
+    });
+    $('input[id$=mass]').val( function() {
+        return ($(this).parent().find("[id^=slider][id$=mass]").slider("value")  + " Sols");
+    });
+    $("[id^=slider][id$=a]").slider({
          value:1
         ,min:0.0
         ,max:10.1
@@ -23,8 +35,10 @@ $( document ).ready(function() {
             $(this).parent().find("input").val($(this).slider("value") + " AU");
         }
     });
-    $('#star-a').val( $("#slider-star-a").slider("value")  + " AU");
-    $("#slider-star-ecc").slider({
+    $('input[id$=a]').val( function() {
+        return ($(this).parent().find("[id^=slider][id$=a]").slider("value")  + " AU");
+    });
+    $("[id^=slider][id$=ecc]").slider({
          value:1
         ,min:0.0
         ,max:1
@@ -33,8 +47,10 @@ $( document ).ready(function() {
             $(this).parent().find("input").val($(this).slider("value") + "");
         }
     });
-    $('#star-ecc').val( $("#slider-star-ecc").slider("value") + "");
-    $("#slider-star-mAnomaly").slider({
+    $('input[id$=ecc]').val( function() {
+        return ($(this).parent().find("[id^=slider][id$=ecc]").slider("value")  + "");
+    });
+    $("[id^=slider][id$=mAnomaly]").slider({
          value:0
         ,min:0.0
         ,max:360
@@ -43,8 +59,10 @@ $( document ).ready(function() {
             $(this).parent().find("input").val($(this).slider("value") + " \xB0");
         }
     });
-    $('#star-mAnomaly').val( $("#slider-star-mAnomaly").slider("value")  + " \xB0");
-    $("#slider-star-rotI").slider({
+    $('input[id$=mAnomaly]').val( function() {
+        return ($(this).parent().find("[id^=slider][id$=mAnomaly]").slider("value")  + " \xB0");
+    });
+    $("[id^=slider][id$=rotI]").slider({
          value:0
         ,min:-90
         ,max:90
@@ -53,8 +71,10 @@ $( document ).ready(function() {
             $(this).parent().find("input").val($(this).slider("value") + " \xB0");
         }
     });
-    $('#star-rotI').val( $("#slider-star-rotI").slider("value")  + " \xB0");
-    $("#slider-star-rotW").slider({
+    $('input[id$=rotI]').val( function() {
+        return ($(this).parent().find("[id^=slider][id$=rotI]").slider("value")  + " \xB0");
+    });
+    $("[id^=slider][id$=rotW]").slider({
          value:0
         ,min:0.0
         ,max:360
@@ -63,8 +83,10 @@ $( document ).ready(function() {
             $(this).parent().find("input").val($(this).slider("value") + " \xB0");
         }
     });
-    $('#star-rotW').val( $("#slider-star-rotW").slider("value")  + " \xB0");
-    $("#slider-star-rotOmeg").slider({
+    $('input[id$=rotW]').val( function() {
+        return ($(this).parent().find("[id^=slider][id$=rotW]").slider("value")  + " \xB0");
+    });
+    $("[id^=slider][id$=rotOmeg]").slider({
          value:0
         ,min:0.0
         ,max:360
@@ -73,7 +95,9 @@ $( document ).ready(function() {
             $(this).parent().find("input").val($(this).slider("value") + "\xB0");
         }
     });
-    $('#star-rotOmeg').val( $("#slider-star-rotOmeg").slider("value")  + " \xB0");
+    $('input[id$=rotOmeg]').val( function() {
+        return ($(this).parent().find("[id^=slider][id$=rotOmeg]").slider("value")  + " \xB0");
+    });
 
     $('#demo>h3').after( renderer.domElement );
 });

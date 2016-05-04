@@ -1,12 +1,12 @@
-#tab-star label {
+#tabs label {
     width:100px;
     display:inline-block;
 }
-#tab-star input {
+#tabs input {
     width:100px;
     display:inline-block;
 }
-#tab-star .ui-slider {
+#tabs .ui-slider {
     margin-left:25px;
     width:400px;
     display:inline-block;
