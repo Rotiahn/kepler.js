@@ -53,7 +53,7 @@ $( document ).ready(function() {
         return ($('#slider-planet-mass').slider("value")  + " Earths");
     });
     $('#moon-mass').val( function() {
-        return ($('#slider-moon-mass').slider("value")  + " Moons");
+        return ($('#slider-moon-mass').slider("value")  + " Lunas");
     });
     $('#slider-planet-a').slider({
          value:1
@@ -80,9 +80,9 @@ $( document ).ready(function() {
         return ($('#slider-moon-a').slider("value")  + " km");
     });
     $("[id^=slider][id$=ecc]").slider({
-         value:1
+         value:1.0
         ,min:0.0
-        ,max:1
+        ,max:1.1
         ,step:0.1
         ,slide: function(event,ui) {
             $(this).parent().find("input").val($(this).slider("value") + "");
@@ -141,14 +141,33 @@ $( document ).ready(function() {
     });
 
     star = new KEPLER.AstroBody(
-     'Star'
-    ,$("slider-star-mass").slider("value")
+         'Star'
+        ,$("#slider-star-mass").slider("value") * KEPLER.SOL_MASS
     ,new KEPLER.NULL_ORBIT()
     );
     star.geometry = new THREE.SphereGeometry(0.1);
     star.material = new THREE.MeshBasicMaterial( { color: 0xffff00 } );
     star.mesh = new THREE.Mesh( star.geometry, star.material);
     scene.add(star.mesh);
+
+    planet = new KEPLER.AstroBody(
+         'Planet'
+        ,$("#slider-planet-mass").slider("value") * KEPLER.EARTH_MASS
+        ,new KEPLER.Orbit(
+             star
+            ,$('#slider-planet-a').slider("value") * KEPLER.AU
+            ,$('#slider-planet-ecc').slider("value")
+            ,$('#slider-planet-mAnomaly').slider("value")
+            ,$('#slider-planet-rotI').slider("value")
+            ,$('#slider-planet-rotW').slider("value")
+            ,$('#slider-planet-rotOmeg').slider("value")
+        )
+    );
+    planet.geometry = new THREE.SphereGeometry(0.1);
+    planet.material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+    planet.mesh = new THREE.Mesh( planet.geometry, planet.material);
+    scene.add(planet.mesh);
+
 
     camera.position.set(0,10,10);
     camera.lookAt(star.mesh.position);
