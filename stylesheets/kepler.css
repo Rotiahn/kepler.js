@@ -3,11 +3,11 @@
     display:inline-block;
 }
 #tabs input {
-    width:100px;
+    width:115px;
     display:inline-block;
 }
 #tabs .ui-slider {
-    margin-left:25px;
-    width:400px;
+    margin-left:15px;
+    width:385px;
     display:inline-block;
 }

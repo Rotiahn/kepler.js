@@ -19,7 +19,7 @@ $( document ).ready(function() {
         collapsible:true
     });
 
-    $("[id^=slider][id$=mass]").slider({
+    $('#slider-star-mass').slider({
          value:1
         ,min:0.0
         ,max:10.1
@@ -28,10 +28,34 @@ $( document ).ready(function() {
             $(this).parent().find("input").val($(this).slider("value") + " Sols");
         }
     });
-    $('input[id$=mass]').val( function() {
-        return ($(this).parent().find("[id^=slider][id$=mass]").slider("value")  + " Sols");
+    $('#slider-planet-mass').slider({
+         value:1
+        ,min:0.0
+        ,max:10.1
+        ,step:0.1
+        ,slide: function(event,ui) {
+            $(this).parent().find("input").val($(this).slider("value") + " Earths");
+        }
     });
-    $("[id^=slider][id$=a]").slider({
+    $('#slider-moon-mass').slider({
+         value:1
+        ,min:0.0
+        ,max:10.1
+        ,step:0.1
+        ,slide: function(event,ui) {
+            $(this).parent().find("input").val($(this).slider("value") + " Moons");
+        }
+    });
+    $('#star-mass').val( function() {
+        return ($('#slider-star-mass').slider("value")  + " Sols");
+    });
+    $('#planet-mass').val( function() {
+        return ($('#slider-planet-mass').slider("value")  + " Earths");
+    });
+    $('#moon-mass').val( function() {
+        return ($('#slider-moon-mass').slider("value")  + " Moons");
+    });
+    $('#slider-planet-a').slider({
          value:1
         ,min:0.0
         ,max:10.1
@@ -40,8 +64,20 @@ $( document ).ready(function() {
             $(this).parent().find("input").val($(this).slider("value") + " AU");
         }
     });
-    $('input[id$=a]').val( function() {
-        return ($(this).parent().find("[id^=slider][id$=a]").slider("value")  + " AU");
+    $('#slider-moon-a').slider({
+         value:300000
+        ,min: 0.0
+        ,max: 3000000
+        ,step:30000
+        ,slide: function(event,ui) {
+            $(this).parent().find("input").val($(this).slider("value") + " km");
+        }
+    });
+    $('#planet-a').val( function() {
+        return ($('#slider-planet-a').slider("value")  + " AU");
+    });
+    $('#moon-a').val( function() {
+        return ($('#slider-moon-a').slider("value")  + " km");
     });
     $("[id^=slider][id$=ecc]").slider({
          value:1
