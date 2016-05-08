@@ -3,7 +3,7 @@
 $( document ).ready(function() {
     //Create scene and camera
     scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera( 75, 690 / 690, 0.1, 100 );
+    camera = new THREE.PerspectiveCamera( 75, 690 / 690, 0.001, 100 );
 	light = new THREE.PointLight(0xFFFFDD);
 	amblight = new THREE.AmbientLight(0x444444);
 	scene.add(light);
@@ -65,9 +65,9 @@ $( document ).ready(function() {
         }
     });
     $('#slider-moon-a').slider({
-         value:300000
+         value:30000000
         ,min: 0.0
-        ,max: 3000000
+        ,max: 3030000
         ,step:30000
         ,slide: function(event,ui) {
             $(this).parent().find("input").val($(this).slider("value") + " km");
@@ -148,13 +148,32 @@ $( document ).ready(function() {
     star.geometry = new THREE.SphereGeometry(0.1);
     star.material = new THREE.MeshBasicMaterial( { color: 0xffff00 } );
     star.mesh = new THREE.Mesh( star.geometry, star.material);
-    var starPos = star.getPosition().divideScalar(KEPLER.AU);
-    star.mesh.position.set(
-         starPos.x
-        ,starPos.y
-        ,starPos.z
-    );
     scene.add(star.mesh);
+    star.trailGeom = new THREE.Geometry();
+    star.trail = new THREE.Mesh( star.trailGeom, star.material);
+    scene.add(star.trail);
+    star.update = function(time){
+        this.orbit.addTime(time);
+        var pos = this.getPosition().divideScalar(KEPLER.AU);
+        this.mesh.position.set(
+             pos.x
+            ,pos.y
+            ,pos.z
+        );
+        this.trailGeom.vertices.unshift(pos);
+    }
+    star.update(0);
+    star.zoom = function() {
+        focus = this;
+        camera.position.set(
+              this.mesh.position.x
+             ,this.mesh.position.y+5
+             ,this.mesh.position.z+5
+        );
+        planet.mesh.scale.set(0.4,0.4,0.4);
+        moon.mesh.scale.set(0.1,0.1,0.1);
+        camera.lookAt(this.mesh.position);
+    }
 
     planet = new KEPLER.AstroBody(
          'Planet'
@@ -172,23 +191,98 @@ $( document ).ready(function() {
     planet.geometry = new THREE.SphereGeometry(0.1);
     planet.material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
     planet.mesh = new THREE.Mesh( planet.geometry, planet.material);
-    var planetPos = planet.getPosition().divideScalar(KEPLER.AU);
-    planet.mesh.position.set(
-         planetPos.x
-        ,planetPos.y
-        ,planetPos.z
-    );
+    planet.mesh.scale.set(0.4,0.4,0.4);
     scene.add(planet.mesh);
+    planet.update = function(time){
+        planet.orbit.addTime(time);
+        var pos = planet.getPosition().divideScalar(KEPLER.AU);
+        planet.mesh.position.set(
+             pos.x
+            ,pos.y
+            ,pos.z
+        );
+        //this.trailGeom.unshift(pos);
+    }
+    planet.update(0);
+    planet.zoom = function() {
+        focus = this;
+        camera.position.set(
+              this.mesh.position.x
+             ,this.mesh.position.y+.3
+             ,this.mesh.position.z+.3
+        );
+        planet.mesh.scale.set(0.04,0.04,0.04);
+        moon.mesh.scale.set(0.01,0.01,0.01);
+        camera.lookAt(this.mesh.position);
+    }
+
+    moon = new KEPLER.AstroBody(
+         'Moon'
+        ,$("#slider-moon-mass").slider("value") * KEPLER.EXAMPLE.Luna.mass
+        ,new KEPLER.Orbit(
+             planet
+            ,$('#slider-moon-a').slider("value") * KEPLER.KM
+            ,$('#slider-moon-ecc').slider("value")
+            ,$('#slider-moon-mAnomaly').slider("value")
+            ,$('#slider-moon-rotI').slider("value")
+            ,$('#slider-moon-rotW').slider("value")
+            ,$('#slider-moon-rotOmeg').slider("value")
+        )
+    );
+    moon.geometry = new THREE.SphereGeometry(0.1);
+    moon.material = new THREE.MeshBasicMaterial( { color: 0xffffff } );
+    moon.mesh = new THREE.Mesh( moon.geometry, moon.material);
+    moon.mesh.scale.set(0.1,0.1,0.1);
+    scene.add(moon.mesh);
+    moon.update = function(time){
+        this.orbit.addTime(time);
+        var pos = this.getPosition().divideScalar(KEPLER.AU);
+        this.mesh.position.set(
+             pos.x
+            ,pos.y
+            ,pos.z
+        );
+        //this.trailGeom.unshift(pos);
+    }
+    moon.zoom = function() {
+        focus = this;
+        camera.position.set(
+             this.mesh.position.x
+            ,this.mesh.position.y+.05
+            ,this.mesh.position.z+.05
+        );
+        planet.mesh.scale.set(0.04,0.04,0.04);
+        moon.mesh.scale.set(0.01,0.01,0.01);
+        camera.lookAt(this.mesh.position);
+    }
 
 
-    camera.position.set(0,10,10);
+    camera.position.set(0,5,5);
     camera.lookAt(star.mesh.position);
+
+    star.zoom();
 
     render = function() {
         requestAnimationFrame( render );
         renderer.render( scene, camera );
     }
     render();
+
+    update_1d = function() {
+        //star.orbit.addTime(KEPLER.DAY);
+        //planet.orbit.addTime(KEPLER.DAY);
+        //moon.orbit.addTime(KEPLER.DAY);
+
+        star.update(KEPLER.DAY);
+        planet.update(KEPLER.DAY);
+        moon.update(KEPLER.DAY);
+
+
+        focus.zoom();
+        //render();
+    }
+    setInterval(update_1d,1000/30);
+
 
     $('#demo>h3').after( renderer.domElement );
 });
