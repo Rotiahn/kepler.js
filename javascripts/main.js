@@ -80,7 +80,7 @@ $( document ).ready(function() {
         return ($('#slider-moon-a').slider("value")  + " km");
     });
     $("[id^=slider][id$=ecc]").slider({
-         value:1.0
+         value:0.0
         ,min:0.0
         ,max:1.1
         ,step:0.1
@@ -148,6 +148,12 @@ $( document ).ready(function() {
     star.geometry = new THREE.SphereGeometry(0.1);
     star.material = new THREE.MeshBasicMaterial( { color: 0xffff00 } );
     star.mesh = new THREE.Mesh( star.geometry, star.material);
+    var starPos = star.getPosition().divideScalar(KEPLER.AU);
+    star.mesh.position.set(
+         starPos.x
+        ,starPos.y
+        ,starPos.z
+    );
     scene.add(star.mesh);
 
     planet = new KEPLER.AstroBody(
@@ -166,6 +172,12 @@ $( document ).ready(function() {
     planet.geometry = new THREE.SphereGeometry(0.1);
     planet.material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
     planet.mesh = new THREE.Mesh( planet.geometry, planet.material);
+    var planetPos = planet.getPosition().divideScalar(KEPLER.AU);
+    planet.mesh.position.set(
+         planetPos.x
+        ,planetPos.y
+        ,planetPos.z
+    );
     scene.add(planet.mesh);
 
 
