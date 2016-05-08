@@ -206,6 +206,9 @@ $( document ).ready(function() {
         collapsible:true
     });
 
+    $('#button-star').button().click(function(event) {star.zoom();});
+    $('#button-planet').button().click(function(event) {planet.zoom();});
+    $('#button-moon').button().click(function(event) {moon.zoom();});
     $('#slider-star-mass').slider({
          value:1
         ,min:0.0

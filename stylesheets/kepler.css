@@ -11,3 +11,7 @@
     width:385px;
     display:inline-block;
 }
+#tabs .ui-button {
+    margin-bottom:15px;
+    width:200px;
+}
